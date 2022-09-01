@@ -3,7 +3,6 @@ use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::rc::Rc;
 
-use crate::territory::Territory;
 use itertools::{enumerate, join};
 
 /// Struct representing a continent.

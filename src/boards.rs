@@ -6,12 +6,32 @@
 //! This module provides default implementations that can be used if you so wish.
 use std::rc::Rc;
 
+use crate::boards::BoardEnum::ClassicBoard;
 use crate::continent::Continent;
 use crate::player::PlayerStruct;
 use crate::territory::Territory;
 use crate::{continent, territory};
 
 mod classic_board;
+
+/// Every board under the boards module should be listed here
+pub enum BoardEnum {
+    ClassicBoard(BoardStruct),
+}
+
+/// All boards should implements this trait
+pub trait Board {
+    /// Allows a player to claim a territory that is not yet claimed
+    fn claim_territory(&mut self, _territory_index: usize, _player: &Rc<PlayerStruct>);
+}
+
+impl Board for BoardEnum {
+    fn claim_territory(&mut self, territory_index: usize, player: &Rc<PlayerStruct>) {
+        match self {
+            ClassicBoard(board) => claim_territory(board, territory_index, player),
+        }
+    }
+}
 
 /// A general purpose Board struct.
 #[derive(Debug)]
@@ -51,7 +71,7 @@ pub fn new(continents: Vec<&Rc<Continent>>, territories: Vec<&Rc<Territory>>) ->
 /// Places 1 army on the board from the given player.
 /// `territory_index` points to the index of the territory in the `free_territories` list.
 /// Deletes the given territory from the `free_territories` list and sets the `player` in the `Territory`.
-pub fn claim_territory<'a>(
+pub fn claim_territory(
     board: &mut BoardStruct,
     free_territory_index: usize,
     player: &Rc<PlayerStruct>,
@@ -83,10 +103,4 @@ pub fn claim_territory<'a>(
     if continent.territories_per_player.borrow()[player.index] == continent.size {
         player.continents.borrow_mut().insert(Rc::clone(continent));
     }
-}
-
-/// All boards should implements this trait
-pub trait Board<'a> {
-    /// Allows a player to claim a territory that is not yet claimed
-    fn claim_territory(&mut self, _territory_index: usize, _player: &Rc<PlayerStruct>) {}
 }
