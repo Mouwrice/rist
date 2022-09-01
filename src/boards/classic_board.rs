@@ -2,6 +2,7 @@
 
 use std::rc::Rc;
 
+use crate::boards;
 use BoardStruct as ClassicBoard;
 
 use crate::boards::{Board, BoardStruct};
@@ -9,15 +10,15 @@ use crate::continent::Continent;
 use crate::player::PlayerStruct;
 use crate::territory::Territory;
 
-impl<'a> ClassicBoard<'a> {
-    fn new(players: usize) -> ClassicBoard<'a> {
+impl ClassicBoard {
+    fn new(players: usize) -> Self {
         // CONTINENTS
-        let north_america = Rc::new(Continent::new("North America", players, 9));
-        let europe = Rc::new(Continent::new("Europe", players, 6));
-        let asia = Rc::new(Continent::new("Asia", players, 12));
-        let south_america = Rc::new(Continent::new("South America", players, 4));
-        let africa = Rc::new(Continent::new("Africa", players, 6));
-        let australia = Rc::new(Continent::new("Australia", players, 4));
+        let north_america = Rc::new(Continent::new("North America", players, 5, 9));
+        let europe = Rc::new(Continent::new("Europe", players, 5, 6));
+        let asia = Rc::new(Continent::new("Asia", players, 7, 12));
+        let south_america = Rc::new(Continent::new("South America", players, 2, 4));
+        let africa = Rc::new(Continent::new("Africa", players, 3, 6));
+        let australia = Rc::new(Continent::new("Australia", players, 2, 4));
 
         // TERRITORIES
 
@@ -204,67 +205,65 @@ impl<'a> ClassicBoard<'a> {
         western_australia.create_connections(vec![&indonesia, &new_guinea, &eastern_australia]);
         eastern_australia.create_connections(vec![&western_australia, &new_guinea]);
 
-        BoardStruct::new_board_struct(
+        boards::new(
             vec![
-                north_america,
-                europe,
-                asia,
-                south_america,
-                africa,
-                australia,
+                &north_america,
+                &europe,
+                &asia,
+                &south_america,
+                &africa,
+                &australia,
             ],
             vec![
-                alaska,
-                northwest_territory,
-                greenland,
-                alberta,
-                ontario,
-                quebec,
-                western_us,
-                eastern_us,
-                central_america,
-                venezuela,
-                brazil,
-                peru,
-                argentina,
-                iceland,
-                scandinavia,
-                great_britain,
-                northern_europe,
-                ukraine,
-                western_europe,
-                southern_europe,
-                yakutsk,
-                ural,
-                siberia,
-                irkutsk,
-                kamchatka,
-                afghanistan,
-                china,
-                mongolia,
-                japan,
-                middle_east,
-                india,
-                siam,
-                north_africa,
-                egypt,
-                congo,
-                east_africa,
-                south_africa,
-                madagascar,
-                indonesia,
-                new_guinea,
-                western_australia,
-                eastern_australia,
+                &alaska,
+                &northwest_territory,
+                &greenland,
+                &alberta,
+                &ontario,
+                &quebec,
+                &western_us,
+                &eastern_us,
+                &central_america,
+                &venezuela,
+                &brazil,
+                &peru,
+                &argentina,
+                &iceland,
+                &scandinavia,
+                &great_britain,
+                &northern_europe,
+                &ukraine,
+                &western_europe,
+                &southern_europe,
+                &yakutsk,
+                &ural,
+                &siberia,
+                &irkutsk,
+                &kamchatka,
+                &afghanistan,
+                &china,
+                &mongolia,
+                &japan,
+                &middle_east,
+                &india,
+                &siam,
+                &north_africa,
+                &egypt,
+                &congo,
+                &east_africa,
+                &south_africa,
+                &madagascar,
+                &indonesia,
+                &new_guinea,
+                &western_australia,
+                &eastern_australia,
             ],
         )
     }
 }
 
-impl<'a> Board<'a> for ClassicBoard<'a> {
-    /// Allows a player to claim a territory that is not yet claimed
-    fn claim_territory(&self, territory_index: u32, player: &PlayerStruct) {}
-
-    /// Place a given amount of armies on the specified territory for a player
-    fn place_armies(&self, territory: &Territory, player: &PlayerStruct, armies: u32) {}
+impl<'a> Board<'a> for ClassicBoard {
+    fn claim_territory(&mut self, territory_index: usize, player: &Rc<PlayerStruct>) {
+        boards::claim_territory(self, territory_index, player);
+    }
 }

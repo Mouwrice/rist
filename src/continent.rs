@@ -1,28 +1,34 @@
 use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
+use std::hash::{Hash, Hasher};
+use std::rc::Rc;
 
+use crate::territory::Territory;
 use itertools::{enumerate, join};
 
-/// Struct representing a continent
-/// A continent groups territories together
-/// /// `Continent` gets used with an `Rc` and can therefore only have mutable fields with a `RefCell`
+/// Struct representing a continent.
+/// A continent groups territories together.
+/// `Continent` gets used with an `Rc` and can therefore only have mutable fields with a `RefCell`
 #[derive(Debug)]
 pub struct Continent {
-    pub id: RefCell<u32>,
+    pub index: RefCell<usize>,
     pub name: String,
     /// Keeps track of occupied territories per player, using the player id
-    territories_per_player: Vec<u32>,
+    pub territories_per_player: RefCell<Vec<u32>>,
+    /// Armies rewarded for occupying the entire continent
+    armies_reward: u32,
     /// The amount of territories the continent contains
-    size: u32,
+    pub size: u32,
 }
 
 impl Continent {
     /// Creates an instance of a continent
-    pub fn new(name: &str, players: usize, size: u32) -> Continent {
+    pub fn new(name: &str, players: usize, armies_reward: u32, size: u32) -> Continent {
         Continent {
-            id: RefCell::from(0),
+            index: RefCell::from(0),
             name: String::from(name),
-            territories_per_player: vec![0; players],
+            territories_per_player: RefCell::from(vec![0; players]),
+            armies_reward,
             size,
         }
     }
@@ -37,17 +43,31 @@ impl Display for Continent {
             \tterritories_per_player: {}\n\
             \tsize: {}",
             self.name,
-            self.id.borrow(),
-            join(&self.territories_per_player, ", "),
+            self.index.borrow(),
+            join(&*self.territories_per_player.borrow(), ", "),
             self.size
         )
     }
 }
 
+impl Hash for Continent {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.index.borrow().hash(state);
+    }
+}
+
+impl PartialEq<Self> for Continent {
+    fn eq(&self, other: &Self) -> bool {
+        self.index.borrow().clone() == other.index.borrow().clone()
+    }
+}
+
+impl Eq for Continent {}
+
 /// Generate ids for a list of all continents.
 /// We use the continent index number as ID
-pub fn generate_ids(continents: Vec<&Continent>) {
+pub fn generate_ids(continents: &Vec<&Rc<Continent>>) {
     for (i, continent) in enumerate(continents) {
-        *continent.id.borrow_mut() = i as u32;
+        *continent.index.borrow_mut() = i;
     }
 }

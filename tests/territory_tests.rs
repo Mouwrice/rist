@@ -6,7 +6,7 @@ use rist::territory::{generate_ids, Territory};
 /// Test the territory display visually
 #[test]
 fn test_territory_display() {
-    let continent = Rc::new(Continent::new("TestContinent", 4, 3));
+    let continent = Rc::new(Continent::new("TestContinent", 4, 5, 3));
 
     let territory1 = Rc::new(Territory::new("TestTerritory1", Rc::clone(&continent)));
     let territory2 = Rc::new(Territory::new("TestTerritory2", Rc::clone(&continent)));
@@ -29,7 +29,7 @@ fn test_territory_display() {
 /// Test the connection creation
 #[test]
 fn test_create_connections() {
-    let continent = Rc::new(Continent::new("TestContinent", 4, 3));
+    let continent = Rc::new(Continent::new("TestContinent", 4, 5, 3));
 
     let territory1 = Rc::new(Territory::new("TestTerritory1", Rc::clone(&continent)));
     let territory2 = Rc::new(Territory::new("TestTerritory2", Rc::clone(&continent)));
@@ -61,15 +61,15 @@ fn test_create_connections() {
 /// Test the territory numbering
 #[test]
 fn test_territory_id_generation() {
-    let continent = Rc::new(Continent::new("TestContinent", 4, 3));
+    let continent = Rc::new(Continent::new("TestContinent", 4, 5, 3));
 
     let territory1 = Rc::new(Territory::new("TestTerritory1", Rc::clone(&continent)));
     let territory2 = Rc::new(Territory::new("TestTerritory2", Rc::clone(&continent)));
     let territory3 = Rc::new(Territory::new("TestTerritory3", Rc::clone(&continent)));
 
-    generate_ids(vec![&territory1, &territory2, &territory3]);
+    generate_ids(&vec![&territory1, &territory2, &territory3]);
 
-    assert_eq!(*territory1.id.borrow(), 0);
-    assert_eq!(*territory2.id.borrow(), 1);
-    assert_eq!(*territory3.id.borrow(), 2);
+    assert_eq!(*territory1.index.borrow(), 0);
+    assert_eq!(*territory2.index.borrow(), 1);
+    assert_eq!(*territory3.index.borrow(), 2);
 }

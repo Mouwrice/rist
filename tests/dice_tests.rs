@@ -1,5 +1,6 @@
 use rist::dice;
 use rist::player::PlayerStruct;
+use std::cell::RefCell;
 
 /// Every dice roll should be between 1 and 6
 #[test]
@@ -13,9 +14,9 @@ fn test_roll_dice() {
 #[test]
 fn test_player_rolls_dice() {
     let player = PlayerStruct {
-        id: 0,
+        index: 0,
         name: "TestPlayer".to_string(),
-        armies: 0,
+        armies: RefCell::from(0),
         territories: Default::default(),
         continents: Default::default(),
     };
@@ -29,16 +30,16 @@ fn test_player_rolls_dice() {
 #[test]
 fn test_players_roll_die() {
     let player1 = PlayerStruct {
-        id: 0,
+        index: 0,
         name: "TestPlayer1".to_string(),
-        armies: 0,
+        armies: RefCell::from(0),
         territories: Default::default(),
         continents: Default::default(),
     };
     let player2 = PlayerStruct {
-        id: 0,
+        index: 0,
         name: "TestPlayer2".to_string(),
-        armies: 0,
+        armies: RefCell::from(0),
         territories: Default::default(),
         continents: Default::default(),
     };
