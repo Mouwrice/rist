@@ -57,7 +57,7 @@ impl Hash for Continent {
 
 impl PartialEq<Self> for Continent {
     fn eq(&self, other: &Self) -> bool {
-        self.index.borrow().clone() == other.index.borrow().clone()
+        *self.index.borrow() == *other.index.borrow()
     }
 }
 

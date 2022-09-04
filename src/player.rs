@@ -1,3 +1,4 @@
+use colored::{Color, ColoredString, Colorize};
 use std::cell::RefCell;
 use std::collections::HashSet;
 use std::fmt::{Display, Formatter};
@@ -14,18 +15,27 @@ pub struct PlayerStruct {
     pub armies: RefCell<u32>,
     pub territories: RefCell<HashSet<Rc<Territory>>>,
     pub continents: RefCell<HashSet<Rc<Continent>>>,
+    foreground: Color,
+    background: Color,
 }
 
 impl PlayerStruct {
-    pub fn new(name: &str, armies: u32) -> Self {
+    pub fn new(name: &str, armies: u32, background: Color, foreground: Color) -> Self {
         PlayerStruct {
             index: 0,
             name: String::from(name),
             armies: RefCell::from(armies),
             territories: RefCell::from(HashSet::new()),
             continents: RefCell::from(HashSet::new()),
+            foreground,
+            background,
         }
     }
+}
+
+/// Color the text to the color of the player
+pub fn colorize(player: &Rc<PlayerStruct>, text: String) -> ColoredString {
+    text.color(player.foreground).on_color(player.background)
 }
 
 impl Display for PlayerStruct {
@@ -57,15 +67,17 @@ impl Display for PlayerStruct {
 }
 
 trait Player {
-    fn claim_territory() {} // TODO
+    fn claim_territory();
 
-    fn place_armies() {} // TODO
+    fn place_armies();
 
-    fn attack() {} // TODO
+    fn attack();
 
-    fn capture() {} // TODO
+    fn capture();
 
-    fn defend() {} // TODO
+    fn defend();
 
-    fn free_move() {} // TODO
+    fn free_move();
+
+    fn colorize(player: &PlayerStruct, text: String);
 }

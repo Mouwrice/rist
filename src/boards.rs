@@ -4,6 +4,7 @@
 //! A board contains all territories and continents.
 //!
 //! This module provides default implementations that can be used if you so wish.
+use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 
 use crate::boards::BoardEnum::ClassicBoard;
@@ -12,17 +13,26 @@ use crate::player::PlayerStruct;
 use crate::territory::Territory;
 use crate::{continent, territory};
 
-mod classic_board;
+pub mod classic_board;
 
 /// Every board under the boards module should be listed here
+#[derive(Debug)]
 pub enum BoardEnum {
     ClassicBoard(BoardStruct),
 }
 
 /// All boards should implements this trait
-pub trait Board {
+pub trait Board: Display {
     /// Allows a player to claim a territory that is not yet claimed
     fn claim_territory(&mut self, _territory_index: usize, _player: &Rc<PlayerStruct>);
+}
+
+impl Display for BoardEnum {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ClassicBoard(board) => classic_board::fmt(board, f),
+        }
+    }
 }
 
 impl Board for BoardEnum {

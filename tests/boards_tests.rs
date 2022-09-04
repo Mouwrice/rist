@@ -40,6 +40,7 @@ fn test_new_board_struct() {
 
 /// Tests claiming territories
 mod claim_territory {
+    use colored::Color::{Magenta, White};
     use rist::boards;
     use rist::boards::claim_territory;
     use rist::continent::Continent;
@@ -54,7 +55,7 @@ mod claim_territory {
 
         let mut board = boards::new(vec![&continent], vec![&territory]);
 
-        let player = Rc::new(PlayerStruct::new("TestPlayer", 1));
+        let player = Rc::new(PlayerStruct::new("TestPlayer", 1, Magenta, White));
 
         claim_territory(&mut board, 0, &player);
 
@@ -80,7 +81,7 @@ mod claim_territory {
 
         let mut board = boards::new(vec![&continent], vec![&territory]);
 
-        let player = Rc::new(PlayerStruct::new("TestPlayer", 0));
+        let player = Rc::new(PlayerStruct::new("TestPlayer", 0, Magenta, White));
 
         claim_territory(&mut board, 0, &player);
     }

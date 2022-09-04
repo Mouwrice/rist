@@ -1,4 +1,5 @@
 use std::cell::RefCell;
+use std::cmp::min;
 use std::fmt::{Display, Formatter};
 use std::hash::{Hash, Hasher};
 use std::rc::{Rc, Weak};
@@ -26,7 +27,7 @@ impl<'a> Territory {
         Territory {
             index: RefCell::from(0),
             name: String::from(name),
-            abbr: String::from(&name[0..5]),
+            abbr: String::from(&name[0..min(5, name.len())]).to_uppercase(),
             connections: RefCell::from(vec![]),
             continent,
             armies: RefCell::from(0),
