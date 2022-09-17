@@ -15,7 +15,7 @@ pub struct Continent {
     /// Keeps track of occupied territories per player, using the player id
     pub territories_per_player: RefCell<Vec<u32>>,
     /// Armies rewarded for occupying the entire continent
-    armies_reward: u32,
+    _armies_reward: u32,
     /// The amount of territories the continent contains
     pub size: u32,
 }
@@ -27,7 +27,7 @@ impl Continent {
             index: RefCell::from(0),
             name: String::from(name),
             territories_per_player: RefCell::from(vec![0; players]),
-            armies_reward,
+            _armies_reward: armies_reward,
             size,
         }
     }

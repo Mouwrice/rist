@@ -1,33 +1,43 @@
 use crate::boards::Board;
-use crate::players::PlayerStruct;
-use std::fmt::Formatter;
+use crate::players::{Player, PlayerStruct};
+use std::fmt::{Display, Formatter};
 
-pub fn fmt(player: &PlayerStruct, f: &mut Formatter<'_>) -> std::fmt::Result {
-    write!(
-        f,
-        "{}\n\
-            \tindex: {}\n\
-            \tarmies: {}\n\
-            \tterritories: {}\n\
-            \tcontinents: {}",
-        player.name,
-        player.index,
-        player.armies.borrow(),
-        player
-            .territories
-            .borrow()
-            .iter()
-            .map(|territory| &territory.name[..])
-            .collect::<Vec<&str>>()
-            .join(", "),
-        player
-            .continents
-            .borrow()
-            .iter()
-            .map(|continent| &continent.name[..])
-            .collect::<Vec<&str>>()
-            .join(", "),
-    )
+pub struct RandomPlayer {
+    player: PlayerStruct,
 }
 
-pub fn claim_territory(player: &PlayerStruct, board: &dyn Board) {}
+impl Display for RandomPlayer {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        self.player.fmt(f)
+    }
+}
+
+impl Player for RandomPlayer {
+    fn claim_territory(&self, _board: &dyn Board) {
+        todo!()
+    }
+
+    fn place_armies() {
+        todo!()
+    }
+
+    fn attack() {
+        todo!()
+    }
+
+    fn capture() {
+        todo!()
+    }
+
+    fn defend() {
+        todo!()
+    }
+
+    fn free_move() {
+        todo!()
+    }
+
+    fn colorize(_player: &PlayerStruct, _text: String) {
+        todo!()
+    }
+}

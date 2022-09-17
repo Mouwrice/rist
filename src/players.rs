@@ -9,14 +9,7 @@ use colored::{Color, ColoredString, Colorize};
 
 use crate::boards::Board;
 use crate::continent::Continent;
-use crate::players::PlayerEnum::RandomPlayer;
 use crate::territory::Territory;
-
-/// Every player under the players module should be listed here
-#[derive(Debug)]
-pub enum PlayerEnum {
-    RandomPlayer(PlayerStruct),
-}
 
 /// All players should implement this trait
 pub trait Player: Display {
@@ -36,47 +29,8 @@ pub trait Player: Display {
     fn colorize(player: &PlayerStruct, text: String);
 }
 
-impl Display for PlayerEnum {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            RandomPlayer(player) => random_player::fmt(player, f),
-        }
-    }
-}
-
-impl Player for PlayerEnum {
-    fn claim_territory(&self, board: &dyn Board) {
-        match self {
-            RandomPlayer(player) => random_player::claim_territory(player, board),
-        }
-    }
-
-    fn place_armies() {
-        todo!()
-    }
-
-    fn attack() {
-        todo!()
-    }
-
-    fn capture() {
-        todo!()
-    }
-
-    fn defend() {
-        todo!()
-    }
-
-    fn free_move() {
-        todo!()
-    }
-
-    fn colorize(_player: &PlayerStruct, _text: String) {
-        todo!()
-    }
-}
-
 #[derive(Debug)]
+/// The default internal structure of a player
 /// `Player` gets used with an `Rc` and can therefore only have mutable fields with a `RefCell`
 pub struct PlayerStruct {
     pub index: usize,
@@ -104,5 +58,33 @@ impl PlayerStruct {
     /// Color the text to the color of the player
     pub fn colorize(&self, text: String) -> ColoredString {
         text.color(self.foreground).on_color(self.background)
+    }
+}
+
+impl Display for PlayerStruct {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f,
+            "{}\n\
+            \tindex: {}\n\
+            \tarmies: {}\n\
+            \tterritories: {}\n\
+            \tcontinents: {}",
+            self.name,
+            self.index,
+            self.armies.borrow(),
+            self.territories
+                .borrow()
+                .iter()
+                .map(|territory| &territory.name[..])
+                .collect::<Vec<&str>>()
+                .join(", "),
+            self.continents
+                .borrow()
+                .iter()
+                .map(|continent| &continent.name[..])
+                .collect::<Vec<&str>>()
+                .join(", "),
+        )
     }
 }

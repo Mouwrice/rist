@@ -14,7 +14,7 @@ use crate::{continent, territory};
 
 pub mod classic_board;
 
-/// The internal structure of a board
+/// The default internal structure of a board
 #[derive(Debug)]
 pub struct BoardStruct {
     /// All continents of the entire map
@@ -25,6 +25,8 @@ pub struct BoardStruct {
     pub free_territories: Vec<usize>,
 }
 
+/// Provides a default implementation according to the standard ruleset
+/// You are free to not use these functions and implement a different behaviour to your liking
 impl BoardStruct {
     /// Default new `BoardStruct` instance creation
     pub fn new(continents: Vec<&Rc<Continent>>, territories: Vec<&Rc<Territory>>) -> BoardStruct {
