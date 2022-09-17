@@ -3,7 +3,7 @@ use itertools::{enumerate, join};
 use rand::distributions::Uniform;
 use rand::Rng;
 
-use crate::player::PlayerStruct;
+use crate::players::PlayerStruct;
 
 /// Simulates rolling a give amount of standard 6 sided dice
 pub fn roll_dice(amount: u32) -> Vec<u32> {

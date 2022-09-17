@@ -1,4 +1,4 @@
-use rist::boards;
+use rist::boards::BoardStruct;
 use std::rc::Rc;
 
 use rist::continent::Continent;
@@ -24,7 +24,7 @@ fn test_new_board_struct() {
     territory4.create_connections(vec![&territory2, &territory5]);
     territory5.create_connections(vec![&territory4, &territory3]);
 
-    let board = boards::new(
+    let board = BoardStruct::new(
         vec![&continent1, &continent2],
         vec![
             &territory1,
@@ -41,10 +41,9 @@ fn test_new_board_struct() {
 /// Tests claiming territories
 mod claim_territory {
     use colored::Color::{Magenta, White};
-    use rist::boards;
-    use rist::boards::claim_territory;
+    use rist::boards::BoardStruct;
     use rist::continent::Continent;
-    use rist::player::PlayerStruct;
+    use rist::players::PlayerStruct;
     use rist::territory::Territory;
     use std::rc::Rc;
 
@@ -53,11 +52,11 @@ mod claim_territory {
         let continent = Rc::new(Continent::new("TestContinent", 4, 5, 1));
         let territory = Rc::new(Territory::new("TestTerritory", Rc::clone(&continent)));
 
-        let mut board = boards::new(vec![&continent], vec![&territory]);
+        let mut board = BoardStruct::new(vec![&continent], vec![&territory]);
 
         let player = Rc::new(PlayerStruct::new("TestPlayer", 1, Magenta, White));
 
-        claim_territory(&mut board, 0, &player);
+        board.claim_territory(0, &player);
 
         assert_eq!(*territory.armies.borrow(), 1);
         assert_eq!(*player.armies.borrow(), 0);
@@ -79,10 +78,10 @@ mod claim_territory {
         let continent = Rc::new(Continent::new("TestContinent", 4, 5, 1));
         let territory = Rc::new(Territory::new("TestTerritory", Rc::clone(&continent)));
 
-        let mut board = boards::new(vec![&continent], vec![&territory]);
+        let mut board = BoardStruct::new(vec![&continent], vec![&territory]);
 
         let player = Rc::new(PlayerStruct::new("TestPlayer", 0, Magenta, White));
 
-        claim_territory(&mut board, 0, &player);
+        board.claim_territory(0, &player);
     }
 }

@@ -7,7 +7,7 @@ use std::rc::{Rc, Weak};
 use itertools::enumerate;
 
 use crate::continent::Continent;
-use crate::player::PlayerStruct;
+use crate::players::PlayerStruct;
 
 #[derive(Debug)]
 /// Represents a singular Risk Territory.

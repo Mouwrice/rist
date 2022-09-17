@@ -1,7 +1,7 @@
 use colored::Color::{Magenta, White};
 
 use rist::dice;
-use rist::player::PlayerStruct;
+use rist::players::PlayerStruct;
 
 /// Every dice roll should be between 1 and 6
 #[test]

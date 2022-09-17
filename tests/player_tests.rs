@@ -1,5 +1,5 @@
 use colored::Color::{Blue, White};
-use rist::player::{colorize, PlayerStruct};
+use rist::players::PlayerStruct;
 use std::rc::Rc;
 
 /// Test string coloring
@@ -8,5 +8,5 @@ use std::rc::Rc;
 fn test_colorize() {
     let player = Rc::new(PlayerStruct::new("TestPlayer", 5, Blue, White));
 
-    println!("{}", colorize(&player, String::from("I am Blue")));
+    println!("{}", player.colorize(String::from("I am Blue")));
 }
