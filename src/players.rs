@@ -1,39 +1,32 @@
-pub mod random_player;
+//! Defines the player trait and a default player structure that can be used
+//! A player is not allowed to directly mutate the board struct
 
 use std::cell::RefCell;
 use std::collections::HashSet;
-use std::fmt::{Display, Formatter};
+use std::fmt::{Debug, Display, Formatter};
 use std::rc::Rc;
 
 use colored::{Color, ColoredString, Colorize};
+use itertools::enumerate;
 
-use crate::boards::Board;
+use crate::boards::BoardStruct;
 use crate::continent::Continent;
 use crate::territory::Territory;
 
-/// All players should implement this trait
-pub trait Player: Display {
-    /// Allows a player to claim a territory that is not claimed
-    fn claim_territory(&self, board: &dyn Board);
-
-    fn place_armies();
-
-    fn attack();
-
-    fn capture();
-
-    fn defend();
-
-    fn free_move();
-
-    fn colorize(player: &PlayerStruct, text: String);
-}
+pub mod random_player;
 
 #[derive(Debug)]
+pub enum PlayerType {
+    Unimplemented,
+    RandomPlayer,
+}
+
 /// The default internal structure of a player
 /// `Player` gets used with an `Rc` and can therefore only have mutable fields with a `RefCell`
+#[derive(Debug)]
 pub struct PlayerStruct {
-    pub index: usize,
+    pub player: PlayerType,
+    pub index: RefCell<usize>,
     pub name: String,
     pub armies: RefCell<u32>,
     pub territories: RefCell<HashSet<Rc<Territory>>>,
@@ -43,11 +36,12 @@ pub struct PlayerStruct {
 }
 
 impl PlayerStruct {
-    pub fn new(name: &str, armies: u32, background: Color, foreground: Color) -> Self {
+    pub fn new(player: PlayerType, name: &str, background: Color, foreground: Color) -> Self {
         PlayerStruct {
-            index: 0,
+            player,
+            index: RefCell::from(0),
             name: String::from(name),
-            armies: RefCell::from(armies),
+            armies: RefCell::from(0),
             territories: RefCell::from(HashSet::new()),
             continents: RefCell::from(HashSet::new()),
             foreground,
@@ -59,6 +53,50 @@ impl PlayerStruct {
     pub fn colorize(&self, text: String) -> ColoredString {
         text.color(self.foreground).on_color(self.background)
     }
+
+    /// Allows a player to claim a territory that is not yet claimed
+    /// Returns the index of the free territory
+    pub fn claim_territory(&self, board: &BoardStruct) -> usize {
+        match &self.player {
+            PlayerType::RandomPlayer => random_player::claim_territory(board),
+            PlayerType::Unimplemented => unimplemented!(),
+        }
+    }
+
+    fn place_armies(&self) {
+        match &self.player {
+            PlayerType::RandomPlayer => random_player::place_armies(self),
+            PlayerType::Unimplemented => unimplemented!(),
+        }
+    }
+
+    fn attack(&self) {
+        match &self.player {
+            PlayerType::RandomPlayer => random_player::attack(self),
+            PlayerType::Unimplemented => unimplemented!(),
+        }
+    }
+
+    fn capture(&self) {
+        match &self.player {
+            PlayerType::RandomPlayer => random_player::capture(self),
+            PlayerType::Unimplemented => unimplemented!(),
+        }
+    }
+
+    fn defend(&self) {
+        match &self.player {
+            PlayerType::RandomPlayer => random_player::defend(self),
+            PlayerType::Unimplemented => unimplemented!(),
+        }
+    }
+
+    fn free_move(&self) {
+        match &self.player {
+            PlayerType::RandomPlayer => random_player::free_move(self),
+            PlayerType::Unimplemented => unimplemented!(),
+        }
+    }
 }
 
 impl Display for PlayerStruct {
@@ -66,12 +104,14 @@ impl Display for PlayerStruct {
         write!(
             f,
             "{}\n\
+            \tplayer: {:?}\n\
             \tindex: {}\n\
             \tarmies: {}\n\
             \tterritories: {}\n\
             \tcontinents: {}",
             self.name,
-            self.index,
+            self.player,
+            self.index.borrow(),
             self.armies.borrow(),
             self.territories
                 .borrow()
@@ -86,5 +126,12 @@ impl Display for PlayerStruct {
                 .collect::<Vec<&str>>()
                 .join(", "),
         )
+    }
+}
+
+/// Generated ids for a list of all players. We use the player index as ID
+pub fn generate_ids(players: &Vec<Rc<PlayerStruct>>) {
+    for (i, player) in enumerate(players) {
+        *player.index.borrow_mut() = i;
     }
 }

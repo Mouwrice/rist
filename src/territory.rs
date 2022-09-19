@@ -22,8 +22,8 @@ pub struct Territory {
     pub player: RefCell<Option<Weak<PlayerStruct>>>,
 }
 
-impl<'a> Territory {
-    pub fn new(name: &'a str, continent: Rc<Continent>) -> Self {
+impl Territory {
+    pub fn new(name: &str, continent: Rc<Continent>) -> Self {
         Territory {
             index: RefCell::from(0),
             name: String::from(name),
@@ -41,6 +41,14 @@ impl<'a> Territory {
             .iter()
             .map(|territory| Rc::downgrade(territory))
             .collect();
+    }
+
+    pub fn get_player(&self) -> Option<Rc<PlayerStruct>> {
+        if let Some(weak) = &*self.player.borrow() {
+            let player = weak.upgrade();
+            return player;
+        }
+        None
     }
 
     /// Places given amount from armies on the territory and removes them from the player
@@ -62,11 +70,10 @@ impl Display for Territory {
         let connections = connections.join(", ");
 
         let mut player_name = String::from("None");
-        if let Some(player) = &*self.player.borrow() {
-            if let Some(player) = player.upgrade() {
-                player_name = String::from(&player.name);
-            }
+        if let Some(player) = self.get_player() {
+            player_name = String::from(&player.name);
         }
+
         write!(
             f,
             "{}\n\

@@ -1,4 +1,5 @@
 use rist::boards::BoardStruct;
+use rist::boards::BoardType::Unimplemented;
 use std::rc::Rc;
 
 use rist::continent::Continent;
@@ -24,7 +25,8 @@ fn test_new_board_struct() {
     territory4.create_connections(vec![&territory2, &territory5]);
     territory5.create_connections(vec![&territory4, &territory3]);
 
-    let board = BoardStruct::new(
+    let board = BoardStruct::generate_board(
+        Unimplemented,
         vec![&continent1, &continent2],
         vec![
             &territory1,
@@ -42,6 +44,7 @@ fn test_new_board_struct() {
 mod claim_territory {
     use colored::Color::{Magenta, White};
     use rist::boards::BoardStruct;
+    use rist::boards::BoardType::Unimplemented;
     use rist::continent::Continent;
     use rist::players::PlayerStruct;
     use rist::territory::Territory;
@@ -52,9 +55,15 @@ mod claim_territory {
         let continent = Rc::new(Continent::new("TestContinent", 4, 5, 1));
         let territory = Rc::new(Territory::new("TestTerritory", Rc::clone(&continent)));
 
-        let mut board = BoardStruct::new(vec![&continent], vec![&territory]);
+        let mut board =
+            BoardStruct::generate_board(Unimplemented, vec![&continent], vec![&territory]);
 
-        let player = Rc::new(PlayerStruct::new("TestPlayer", 1, Magenta, White));
+        let player = Rc::new(PlayerStruct::new(
+            Unimplemented,
+            "TestPlayer",
+            Magenta,
+            White,
+        ));
 
         board.claim_territory(0, &player);
 
@@ -62,8 +71,8 @@ mod claim_territory {
         assert_eq!(*player.armies.borrow(), 0);
 
         let mut name = String::from("");
-        if let Some(player) = &*territory.player.borrow() {
-            name = String::from(&player.upgrade().unwrap().name);
+        if let Some(player) = territory.get_player() {
+            name = String::from(&player.name);
         }
 
         assert_eq!(name, "TestPlayer");
@@ -78,9 +87,15 @@ mod claim_territory {
         let continent = Rc::new(Continent::new("TestContinent", 4, 5, 1));
         let territory = Rc::new(Territory::new("TestTerritory", Rc::clone(&continent)));
 
-        let mut board = BoardStruct::new(vec![&continent], vec![&territory]);
+        let mut board =
+            BoardStruct::generate_board(Unimplemented, vec![&continent], vec![&territory]);
 
-        let player = Rc::new(PlayerStruct::new("TestPlayer", 0, Magenta, White));
+        let player = Rc::new(PlayerStruct::new(
+            Unimplemented,
+            "TestPlayer",
+            Magenta,
+            White,
+        ));
 
         board.claim_territory(0, &player);
     }

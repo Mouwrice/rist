@@ -1,43 +1,31 @@
-use crate::boards::Board;
-use crate::players::{Player, PlayerStruct};
-use std::fmt::{Display, Formatter};
+use rand::distributions::Uniform;
+use rand::Rng;
 
-pub struct RandomPlayer {
-    player: PlayerStruct,
+use crate::boards::BoardStruct;
+use crate::players::PlayerStruct;
+
+pub fn claim_territory(board: &BoardStruct) -> usize {
+    let distribution = Uniform::new_inclusive(0, &board.free_territories.len() - 1);
+    let mut rng = rand::thread_rng();
+    rng.sample(distribution)
 }
 
-impl Display for RandomPlayer {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        self.player.fmt(f)
-    }
+pub fn place_armies(player: &PlayerStruct) {
+    todo!()
 }
 
-impl Player for RandomPlayer {
-    fn claim_territory(&self, _board: &dyn Board) {
-        todo!()
-    }
+pub fn attack(player: &PlayerStruct) {
+    todo!()
+}
 
-    fn place_armies() {
-        todo!()
-    }
+pub fn capture(player: &PlayerStruct) {
+    todo!()
+}
 
-    fn attack() {
-        todo!()
-    }
+pub fn defend(player: &PlayerStruct) {
+    todo!()
+}
 
-    fn capture() {
-        todo!()
-    }
-
-    fn defend() {
-        todo!()
-    }
-
-    fn free_move() {
-        todo!()
-    }
-
-    fn colorize(_player: &PlayerStruct, _text: String) {
-        todo!()
-    }
+pub fn free_move(player: &PlayerStruct) {
+    todo!()
 }
