@@ -4,8 +4,11 @@
 //! A board contains all territories and continents.
 //!
 //! This module provides default implementations that can be used if you so wish.
+use std::cell::RefCell;
 use std::fmt::{Display, Formatter};
 use std::rc::Rc;
+use std::thread;
+use std::time::Duration;
 
 use crate::continent::Continent;
 use crate::players::PlayerStruct;
@@ -30,6 +33,10 @@ pub struct BoardStruct {
     pub territories: Vec<Rc<Territory>>,
     /// All territory IDs that are not yet claimed by a player
     pub free_territories: Vec<usize>,
+    extra_info: RefCell<Vec<String>>,
+    /// The maximum of extra info lines that are available
+    /// Force prints the board when full and clears the extra lines afterwards
+    extra_info_lines: usize,
 }
 
 /// Provides a default implementation according to the standard ruleset
@@ -47,6 +54,7 @@ impl BoardStruct {
         board: BoardType,
         continents: Vec<&Rc<Continent>>,
         territories: Vec<&Rc<Territory>>,
+        extra_info_lines: usize,
     ) -> BoardStruct {
         continent::generate_ids(&continents);
         territory::generate_ids(&territories);
@@ -66,6 +74,8 @@ impl BoardStruct {
                 .map(|territory| Rc::clone(territory))
                 .collect(),
             free_territories,
+            extra_info: RefCell::from(vec![]),
+            extra_info_lines,
         }
     }
 
@@ -77,16 +87,26 @@ impl BoardStruct {
     pub fn claim_territory(&mut self, free_territory_index: usize, player: &Rc<PlayerStruct>) {
         // Territory lookup
         let territory_index = self.free_territories[free_territory_index];
-        self.free_territories.remove(free_territory_index);
         let territory = &self.territories[territory_index];
 
-        if *player.armies.borrow() < 1 {
-            panic!(
-                "The player should have at least 1 army in it's inventory. {} has {} remaining",
-                player.name,
-                player.armies.borrow()
-            );
-        }
+        // The player needs to have one army available to claim a territory
+        assert!(
+            *player.armies.borrow() > 1,
+            "The player should have at least 1 army in it's inventory. {} has {} remaining",
+            player.name,
+            player.armies.borrow()
+        );
+
+        // The player cannot claim a territory that is already occupied
+        assert!(
+            territory.get_player().is_none(),
+            "The territory is already occupied. {} tried to claim {}",
+            player.name,
+            territory.name
+        );
+
+        // Remove the territory from the free territories list
+        self.free_territories.remove(free_territory_index);
 
         // Place army
         territory.place_armies(player, 1);
@@ -95,13 +115,38 @@ impl BoardStruct {
         *territory.player.borrow_mut() = Some(Rc::downgrade(player));
         player.territories.borrow_mut().insert(Rc::clone(territory));
 
+        self.set_extra_info(format!("{} claimed {}", player.name, territory.name));
+
         // Assign part of continent to player
         let continent_index = *territory.continent.index.borrow();
         let continent = &self.continents[continent_index];
         continent.territories_per_player.borrow_mut()[*player.index.borrow()] += 1;
         if continent.territories_per_player.borrow()[*player.index.borrow()] == continent.size {
             player.continents.borrow_mut().insert(Rc::clone(continent));
+
+            self.set_extra_info(format!(
+                "{} has claimed the entirety of {}",
+                player.name, continent.name
+            ));
         }
+
+        println!("{}", self);
+        thread::sleep(Duration::from_millis(100));
+        self.clear_extra_info();
+    }
+
+    /// Allows to add some extra text to the board representation
+    pub fn set_extra_info(&self, text: String) {
+        self.extra_info.borrow_mut().push(text);
+        if self.extra_info.borrow().len() >= self.extra_info_lines {
+            println!("{self}");
+            self.clear_extra_info();
+        }
+    }
+
+    /// Clears the extra info
+    pub fn clear_extra_info(&self) {
+        self.extra_info.borrow_mut().clear();
     }
 }
 
