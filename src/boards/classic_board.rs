@@ -23,7 +23,7 @@ pub fn new(players: usize) -> BoardStruct {
     // NORTH AMERICA
     let alaska = Rc::new(Territory::new("Alaska", Rc::clone(&north_america)));
     let northwest_territory = Rc::new(Territory::new(
-        "Northwest Rc::new(Territory",
+        "Northwest Territory",
         Rc::clone(&north_america),
     ));
     let greenland = Rc::new(Territory::new("Greenland", Rc::clone(&north_america)));
@@ -295,9 +295,6 @@ pub fn fmt(board: &BoardStruct, f: &mut Formatter<'_>) -> std::fmt::Result {
         }
         i.push(format!("{:<74}", info));
     }
-
-    // Clears the terminal
-    print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
 
     write!(
         f,

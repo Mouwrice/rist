@@ -6,6 +6,7 @@ use std::collections::HashSet;
 use std::fmt::{Debug, Display, Formatter};
 use std::rc::Rc;
 
+use crate::Attack;
 use colored::{Color, ColoredString, Colorize};
 use itertools::enumerate;
 
@@ -15,7 +16,7 @@ use crate::territory::Territory;
 
 pub mod random_player;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum PlayerType {
     Unimplemented,
     RandomPlayer,
@@ -23,7 +24,7 @@ pub enum PlayerType {
 
 /// The default internal structure of a player
 /// `Player` gets used with an `Rc` and can therefore only have mutable fields with a `RefCell`
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct PlayerStruct {
     pub player: PlayerType,
     pub index: RefCell<usize>,
@@ -33,6 +34,7 @@ pub struct PlayerStruct {
     pub continents: RefCell<HashSet<Rc<Continent>>>,
     foreground: Color,
     background: Color,
+    pub defeated: RefCell<bool>,
 }
 
 impl PlayerStruct {
@@ -46,6 +48,7 @@ impl PlayerStruct {
             continents: RefCell::from(HashSet::new()),
             foreground,
             background,
+            defeated: RefCell::from(false),
         }
     }
 
@@ -63,28 +66,35 @@ impl PlayerStruct {
         }
     }
 
-    fn place_armies(&self) {
+    /// Allows the player to place armies on owned territories
+    /// Returns a list of tuples containing the territories to place troops on
+    pub fn place_armies(&self, board: &BoardStruct) -> Vec<(Rc<Territory>, u32)> {
         match &self.player {
-            PlayerType::RandomPlayer => random_player::place_armies(self),
+            PlayerType::RandomPlayer => random_player::place_armies(self, board),
             PlayerType::Unimplemented => unimplemented!(),
         }
     }
 
-    fn attack(&self) {
+    /// Gives the player an option to attack
+    /// To end the attacking phase the player returns `None`
+    pub fn attack(&self, board: &BoardStruct) -> Option<Attack> {
         match &self.player {
-            PlayerType::RandomPlayer => random_player::attack(self),
+            PlayerType::RandomPlayer => random_player::attack(self, board),
             PlayerType::Unimplemented => unimplemented!(),
         }
     }
 
-    fn capture(&self) {
+    /// When a player takes a territory it must assign a number of armies to that territory
+    pub fn capture(&self, _attack: &Attack) -> u32 {
         match &self.player {
             PlayerType::RandomPlayer => random_player::capture(self),
             PlayerType::Unimplemented => unimplemented!(),
         }
     }
 
-    fn defend(&self) {
+    /// Called when the player is being attacked
+    /// The player must return with how many dice it wishes to defend its territory
+    pub fn defend(&self, _attack: &Attack) -> u32 {
         match &self.player {
             PlayerType::RandomPlayer => random_player::defend(self),
             PlayerType::Unimplemented => unimplemented!(),

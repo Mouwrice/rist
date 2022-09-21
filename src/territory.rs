@@ -52,8 +52,16 @@ impl Territory {
     }
 
     /// Places given amount from armies on the territory and removes them from the player
-    /// Territory must be owned by the player
-    pub fn place_armies(&self, player: &Rc<PlayerStruct>, armies: u32) {
+    /// Territory must be owned by the player or not owned at all
+    pub fn place_armies(&self, player: Rc<PlayerStruct>, armies: u32) {
+        if let Some(occupant) = self.get_player() {
+            assert_eq!(occupant, player, "Territory is owned by another player");
+        }
+        assert!(
+            *player.armies.borrow() > armies,
+            "The player does not have enough armies available"
+        );
+
         *self.armies.borrow_mut() += armies;
         *player.armies.borrow_mut() -= armies;
     }

@@ -1,4 +1,4 @@
-use colored::Color::{Black, Blue, Cyan, Green, Red, White};
+use colored::Color::{Black, Blue, Green, Red, White};
 use rist::boards::BoardStruct;
 use rist::boards::BoardType::ClassicBoard;
 use rist::players::PlayerStruct;

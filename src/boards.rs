@@ -84,7 +84,7 @@ impl BoardStruct {
     /// Places 1 army on the board from the given player.
     /// `territory_index` points to the index of the territory in the `free_territories` list.
     /// Deletes the given territory from the `free_territories` list and sets the `player` in the `Territory`.
-    pub fn claim_territory(&mut self, free_territory_index: usize, player: &Rc<PlayerStruct>) {
+    pub fn claim_territory(&mut self, free_territory_index: usize, player: Rc<PlayerStruct>) {
         // Territory lookup
         let territory_index = self.free_territories[free_territory_index];
         let territory = &self.territories[territory_index];
@@ -109,10 +109,10 @@ impl BoardStruct {
         self.free_territories.remove(free_territory_index);
 
         // Place army
-        territory.place_armies(player, 1);
+        territory.place_armies(Rc::clone(&player), 1);
 
         // Assign territory to player
-        *territory.player.borrow_mut() = Some(Rc::downgrade(player));
+        *territory.player.borrow_mut() = Some(Rc::downgrade(&player));
         player.territories.borrow_mut().insert(Rc::clone(territory));
 
         self.set_extra_info(format!("{} claimed {}", player.name, territory.name));
@@ -147,6 +147,14 @@ impl BoardStruct {
     /// Clears the extra info
     pub fn clear_extra_info(&self) {
         self.extra_info.borrow_mut().clear();
+    }
+    
+    /// Prints the board to stdout
+    pub fn print_board(&self, dur: Duration) {
+        // Clears the terminal
+        print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
+        print!("{self}");
+        thread::sleep(dur);
     }
 }
 

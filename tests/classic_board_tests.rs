@@ -1,7 +1,7 @@
 use colored::Color::{Blue, Green, Red, White};
 use rist::boards::classic_board;
 use rist::players::PlayerStruct;
-use rist::players::PlayerType::{RandomPlayer, Unimplemented};
+use rist::players::PlayerType::Unimplemented;
 use std::rc::Rc;
 
 /// Visual test to test the display of the board
@@ -17,17 +17,17 @@ fn test_display() {
     ));
     let player3 = Rc::new(PlayerStruct::new(Unimplemented, "TestPlayer3", Red, White));
 
-    board.claim_territory(0, &player1);
-    board.claim_territory(0, &player2);
-    board.claim_territory(0, &player2);
-    board.claim_territory(0, &player1);
-    board.claim_territory(0, &player3);
-    board.claim_territory(0, &player3);
-    board.claim_territory(0, &player2);
-    board.claim_territory(0, &player1);
-    board.claim_territory(0, &player1);
-    board.claim_territory(0, &player3);
-    board.claim_territory(0, &player1);
+    board.claim_territory(0, Rc::clone(&player1));
+    board.claim_territory(0, Rc::clone(&player2));
+    board.claim_territory(0, Rc::clone(&player2));
+    board.claim_territory(0, Rc::clone(&player1));
+    board.claim_territory(0, Rc::clone(&player3));
+    board.claim_territory(0, Rc::clone(&player3));
+    board.claim_territory(0, Rc::clone(&player2));
+    board.claim_territory(0, Rc::clone(&player1));
+    board.claim_territory(0, Rc::clone(&player1));
+    board.claim_territory(0, Rc::clone(&player3));
+    board.claim_territory(0, Rc::clone(&player1));
 
     println!("{}", board);
 }

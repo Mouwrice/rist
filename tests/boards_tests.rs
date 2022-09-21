@@ -35,6 +35,7 @@ fn test_new_board_struct() {
             &territory4,
             &territory5,
         ],
+        0,
     );
 
     println!("{:#?}", board);
@@ -43,10 +44,9 @@ fn test_new_board_struct() {
 /// Tests claiming territories
 mod claim_territory {
     use colored::Color::{Magenta, White};
-    use rist::boards::BoardStruct;
-    use rist::boards::BoardType::Unimplemented;
+    use rist::boards::{BoardStruct, BoardType};
     use rist::continent::Continent;
-    use rist::players::PlayerStruct;
+    use rist::players::{PlayerStruct, PlayerType};
     use rist::territory::Territory;
     use std::rc::Rc;
 
@@ -55,17 +55,21 @@ mod claim_territory {
         let continent = Rc::new(Continent::new("TestContinent", 4, 5, 1));
         let territory = Rc::new(Territory::new("TestTerritory", Rc::clone(&continent)));
 
-        let mut board =
-            BoardStruct::generate_board(Unimplemented, vec![&continent], vec![&territory]);
+        let mut board = BoardStruct::generate_board(
+            BoardType::Unimplemented,
+            vec![&continent],
+            vec![&territory],
+            0,
+        );
 
         let player = Rc::new(PlayerStruct::new(
-            Unimplemented,
+            PlayerType::Unimplemented,
             "TestPlayer",
             Magenta,
             White,
         ));
 
-        board.claim_territory(0, &player);
+        board.claim_territory(0, Rc::clone(&player));
 
         assert_eq!(*territory.armies.borrow(), 1);
         assert_eq!(*player.armies.borrow(), 0);
@@ -87,16 +91,20 @@ mod claim_territory {
         let continent = Rc::new(Continent::new("TestContinent", 4, 5, 1));
         let territory = Rc::new(Territory::new("TestTerritory", Rc::clone(&continent)));
 
-        let mut board =
-            BoardStruct::generate_board(Unimplemented, vec![&continent], vec![&territory]);
+        let mut board = BoardStruct::generate_board(
+            BoardType::Unimplemented,
+            vec![&continent],
+            vec![&territory],
+            0,
+        );
 
         let player = Rc::new(PlayerStruct::new(
-            Unimplemented,
+            PlayerType::Unimplemented,
             "TestPlayer",
             Magenta,
             White,
         ));
 
-        board.claim_territory(0, &player);
+        board.claim_territory(0, player);
     }
 }
