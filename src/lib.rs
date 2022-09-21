@@ -1,13 +1,14 @@
+use std::cell::RefCell;
+use std::cmp::{max, min};
+use std::rc::Rc;
+use std::time::{Duration, SystemTime};
+
+use itertools::enumerate;
+
 use crate::boards::BoardStruct;
 use crate::dice::{player_rolls_dice, players_roll_die};
 use crate::players::PlayerStruct;
-use itertools::enumerate;
-use std::cell::RefCell;
-use std::cmp::{max, min};
-
 use crate::territory::Territory;
-use std::rc::Rc;
-use std::time::{Duration, SystemTime};
 
 pub mod boards;
 pub mod continent;
@@ -42,13 +43,18 @@ impl Game {
 
     /// The game setup hands out the initial amount of armies to the players
     /// and lets the players claim their first territories
-    pub fn setup(&mut self) {
-        println!("--- SETUP ---\n");
+    /// `verbose` whether the function should output to stdout
+    pub fn setup(&mut self, verbose: bool) {
+        if verbose {
+            println!("--- SETUP ---\n");
+        }
 
         // The total amount of armies a player is entitled to depends on the amount of players.
         // Playing with more than 6 players is not allowed
         let armies_per_player = vec![50, 35, 30, 25, 20][&self.players.len() - 2];
-        println!("Armies per player: {}\n", armies_per_player);
+        if verbose {
+            println!("Armies per player: {}\n", armies_per_player);
+        }
 
         // Every player receives initial amount of armies
         for player in &*self.players {
@@ -61,11 +67,15 @@ impl Game {
         }
 
         // Decide who gets to go first
-        println!("Highest roller gets to place it's armies first!\n");
+        if verbose {
+            println!("Highest roller gets to place it's armies first!\n");
+        }
         let mut player = &self.players[first_player(&self.players.iter().collect())];
-        println!("{} may begin!\n", player.name);
+        if verbose {
+            println!("{} may begin!\n", player.name);
+        }
 
-        println!("{}", self.board);
+        self.board.print_board(Duration::from_secs(1));
 
         while !self.board.free_territories.is_empty() {
             assert!(
@@ -75,7 +85,7 @@ impl Game {
 
             let free_territory_index = player.claim_territory(&self.board);
             self.board
-                .claim_territory(free_territory_index, Rc::clone(player));
+                .claim_territory(free_territory_index, Rc::clone(player), verbose);
 
             // Get the next player
             player = &self.players[(&*player.index.borrow() + 1) % self.players.len()];
@@ -100,7 +110,7 @@ impl Game {
             if !*player.defeated.borrow() {
                 self.board
                     .set_extra_info(format!("TURN {turn}: {}", player.name));
-                println!("{}", self.board);
+                self.board.print_board(Duration::from_millis(500));
                 self.board.clear_extra_info();
 
                 self.army_accumulation(player);
@@ -154,7 +164,8 @@ impl Game {
         if self.armies_in_box.borrow()[*player.index.borrow()] == 0 {
             self.board
                 .set_extra_info(String::from("\tNo more armies available in the box."));
-            println!("{}", self.board);
+            self.board.print_board(Duration::from_millis(500));
+            self.board.clear_extra_info();
             return;
         }
 
@@ -163,8 +174,9 @@ impl Game {
             max(3, player.territories.borrow().len() as u32 / 3),
         );
 
+        self.board.set_extra_info(String::from(""));
         self.board.set_extra_info(format!(
-            "\t{} receives {armies} for occupying {} territories.",
+            "{} receives {armies} for occupying {} territories.",
             player.name,
             player.territories.borrow().len()
         ));
@@ -194,7 +206,7 @@ impl Game {
             player.name,
             *player.armies.borrow()
         ));
-        println!("{}", self.board);
+        self.board.print_board(Duration::from_millis(500));
         self.board.clear_extra_info();
     }
 
@@ -206,7 +218,7 @@ impl Game {
 
         if placement.is_empty() {
             self.board.set_extra_info(String::from("No armies placed."));
-            println!("{}", self.board);
+            self.board.print_board(Duration::from_millis(500));
             self.board.clear_extra_info();
             return;
         }
@@ -217,10 +229,10 @@ impl Game {
         for (territory, armies) in placement.iter() {
             territory.place_armies(Rc::clone(player), *armies);
             self.board
-                .set_extra_info(format!("\t{}: {armies}", territory.name));
+                .set_extra_info(format!("{}: {armies}", territory.name));
         }
 
-        println!("{}", self.board);
+        self.board.print_board(Duration::from_millis(1000));
         self.board.clear_extra_info();
     }
 

@@ -3,6 +3,7 @@ use rist::boards::classic_board;
 use rist::players::PlayerStruct;
 use rist::players::PlayerType::Unimplemented;
 use std::rc::Rc;
+use std::time::Duration;
 
 /// Visual test to test the display of the board
 #[test]
@@ -29,5 +30,5 @@ fn test_display() {
     board.claim_territory(0, Rc::clone(&player3));
     board.claim_territory(0, Rc::clone(&player1));
 
-    println!("{}", board);
+    board.print_board(Duration::from_secs(0));
 }

@@ -5,7 +5,6 @@
 //!
 //! This module provides default implementations that can be used if you so wish.
 use std::cell::RefCell;
-use std::fmt::{Display, Formatter};
 use std::rc::Rc;
 use std::thread;
 use std::time::Duration;
@@ -84,7 +83,12 @@ impl BoardStruct {
     /// Places 1 army on the board from the given player.
     /// `territory_index` points to the index of the territory in the `free_territories` list.
     /// Deletes the given territory from the `free_territories` list and sets the `player` in the `Territory`.
-    pub fn claim_territory(&mut self, free_territory_index: usize, player: Rc<PlayerStruct>) {
+    pub fn claim_territory(
+        &mut self,
+        free_territory_index: usize,
+        player: Rc<PlayerStruct>,
+        verbose: bool,
+    ) {
         // Territory lookup
         let territory_index = self.free_territories[free_territory_index];
         let territory = &self.territories[territory_index];
@@ -115,7 +119,9 @@ impl BoardStruct {
         *territory.player.borrow_mut() = Some(Rc::downgrade(&player));
         player.territories.borrow_mut().insert(Rc::clone(territory));
 
-        self.set_extra_info(format!("{} claimed {}", player.name, territory.name));
+        if verbose {
+            self.set_extra_info(format!("{} claimed {}", player.name, territory.name));
+        }
 
         // Assign part of continent to player
         let continent_index = *territory.continent.index.borrow();
@@ -124,22 +130,25 @@ impl BoardStruct {
         if continent.territories_per_player.borrow()[*player.index.borrow()] == continent.size {
             player.continents.borrow_mut().insert(Rc::clone(continent));
 
-            self.set_extra_info(format!(
-                "{} has claimed the entirety of {}",
-                player.name, continent.name
-            ));
+            if verbose {
+                self.set_extra_info(format!(
+                    "{} has claimed the entirety of {}",
+                    player.name, continent.name
+                ));
+            }
         }
 
-        println!("{}", self);
-        thread::sleep(Duration::from_millis(100));
-        self.clear_extra_info();
+        if verbose {
+            self.print_board(Duration::from_millis(500));
+            self.clear_extra_info();
+        }
     }
 
     /// Allows to add some extra text to the board representation
     pub fn set_extra_info(&self, text: String) {
         self.extra_info.borrow_mut().push(text);
         if self.extra_info.borrow().len() >= self.extra_info_lines {
-            println!("{self}");
+            self.print_board(Duration::from_millis(500));
             self.clear_extra_info();
         }
     }
@@ -148,21 +157,15 @@ impl BoardStruct {
     pub fn clear_extra_info(&self) {
         self.extra_info.borrow_mut().clear();
     }
-    
+
     /// Prints the board to stdout
     pub fn print_board(&self, dur: Duration) {
         // Clears the terminal
         print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
-        print!("{self}");
-        thread::sleep(dur);
-    }
-}
-
-impl Display for BoardStruct {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self.board {
-            BoardType::ClassicBoard => classic_board::fmt(self, f),
+            BoardType::ClassicBoard => classic_board::print_board(self),
             BoardType::Unimplemented => unimplemented!(),
         }
+        thread::sleep(dur);
     }
 }

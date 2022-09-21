@@ -1,5 +1,4 @@
 //! The original classic Risk board
-use std::fmt::Formatter;
 use std::rc::Rc;
 
 use colored::Colorize;
@@ -261,7 +260,7 @@ pub fn new(players: usize) -> BoardStruct {
     )
 }
 
-pub fn fmt(board: &BoardStruct, f: &mut Formatter<'_>) -> std::fmt::Result {
+pub fn print_board(board: &BoardStruct) {
     // Armies on the territory
     let mut a = vec![];
     // Territory names
@@ -296,8 +295,7 @@ pub fn fmt(board: &BoardStruct, f: &mut Formatter<'_>) -> std::fmt::Result {
         i.push(format!("{:<74}", info));
     }
 
-    write!(
-        f,
+    print!(
         r"         +-----------------------------------------------------------------------------------------------------------------------------------------------------------------------+
          |                                                                                                                                                                       |
   # # #  |  # # # # # # # # # # # # # # # # # # #                                                                                                        # # # # # # # # # # #   |
