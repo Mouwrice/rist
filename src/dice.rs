@@ -13,25 +13,29 @@ pub fn roll_dice(amount: u32) -> Vec<u32> {
 }
 
 /// Lets a player roll a given amount of standard 6 sided dice
-pub fn player_rolls_dice(player: &PlayerStruct, amount: u32) -> Vec<u32> {
+pub fn player_rolls_dice(player: &PlayerStruct, amount: u32, verbose: bool) -> Vec<u32> {
     let rolls = roll_dice(amount);
     let joined = join(&rolls, ", ");
-    println!(
-        "{} rolls {} {}: {}",
-        player.name,
-        amount,
-        if amount > 1 { "dice" } else { "die" },
-        joined
-    );
+    if verbose {
+        println!(
+            "{} rolls {} {}: {}",
+            player.name,
+            amount,
+            if amount > 1 { "dice" } else { "die" },
+            joined
+        );
+    }
     rolls
 }
 
 /// Rolls a standard 6 sided die for every player
 /// The order of rolls is the same as the order of players that is given
-pub fn players_roll_die(players: &Vec<&Rc<PlayerStruct>>) -> Vec<u32> {
+pub fn players_roll_die(players: &Vec<&Rc<PlayerStruct>>, verbose: bool) -> Vec<u32> {
     let rolls = roll_dice(players.len() as u32);
-    for (i, player) in enumerate(players) {
-        println!("{} rolled {}", player.name, rolls[i]);
+    if verbose {
+        for (i, player) in enumerate(players) {
+            println!("{} rolled {}", player.name, rolls[i]);
+        }
     }
     rolls
 }

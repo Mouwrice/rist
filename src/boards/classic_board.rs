@@ -11,7 +11,7 @@ use crate::territory::Territory;
 pub fn new(players: usize) -> BoardStruct {
     // CONTINENTS
     let north_america = Rc::new(Continent::new("North America", players, 5, 9));
-    let europe = Rc::new(Continent::new("Europe", players, 5, 6));
+    let europe = Rc::new(Continent::new("Europe", players, 5, 7));
     let asia = Rc::new(Continent::new("Asia", players, 7, 12));
     let south_america = Rc::new(Continent::new("South America", players, 2, 4));
     let africa = Rc::new(Continent::new("Africa", players, 3, 6));

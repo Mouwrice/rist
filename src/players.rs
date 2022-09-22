@@ -129,7 +129,7 @@ impl PlayerStruct {
         }
     }
 
-    fn free_move(&self) {
+    pub fn free_move(&self) {
         match &self.player {
             PlayerType::RandomPlayer => random_player::free_move(self),
             PlayerType::Unimplemented => unimplemented!(),

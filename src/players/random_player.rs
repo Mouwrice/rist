@@ -65,7 +65,7 @@ pub fn attack(player: &PlayerStruct) -> Option<Attack> {
     if !attacks.is_empty() {
         let mut attack = &attacks[0];
         if !attacks.len() > 1 {
-            let dist = Uniform::new(0, &attacks.len() - 1);
+            let dist = Uniform::new(0, &attacks.len());
             attack = &attacks[rng.sample(dist)];
         }
         return Some(Attack {
@@ -78,12 +78,11 @@ pub fn attack(player: &PlayerStruct) -> Option<Attack> {
 }
 
 pub fn capture(attack: &Attack) -> u32 {
-    if attack.dice == &*attack.attacker.armies.borrow() - 1 {
-        return attack.dice;
-    }
-
     let mut rng = thread_rng();
-    let uniform = Uniform::new(attack.dice, &*attack.attacker.armies.borrow() - 1);
+    let uniform = Uniform::new(
+        min(attack.dice, &*attack.attacker.armies.borrow() - 1),
+        &*attack.attacker.armies.borrow(),
+    );
     rng.sample(uniform)
 }
 
@@ -97,6 +96,4 @@ pub fn defend(attack: &Attack) -> u32 {
     rng.sample(uniform)
 }
 
-pub fn free_move(player: &PlayerStruct) {
-    todo!()
-}
+pub fn free_move(_player: &PlayerStruct) {}
