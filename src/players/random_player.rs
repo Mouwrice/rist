@@ -1,7 +1,7 @@
 use crate::Attack;
-use itertools::enumerate;
 use rand::distributions::Uniform;
 use rand::{thread_rng, Rng};
+use std::cmp::min;
 use std::rc::Rc;
 
 use crate::boards::BoardStruct;
@@ -10,50 +10,91 @@ use crate::territory::Territory;
 
 pub fn claim_territory(board: &BoardStruct) -> usize {
     let distribution = Uniform::new_inclusive(0, &board.free_territories.len() - 1);
-    let mut rng = rand::thread_rng();
+    let mut rng = thread_rng();
     rng.sample(distribution)
 }
 
 pub fn place_armies(player: &PlayerStruct, board: &BoardStruct) -> Vec<(Rc<Territory>, u32)> {
-    let mut territories = vec![];
-    let mut armies = vec![];
-
     let mut rng = thread_rng();
-    let uniform = Uniform::new(0, *player.armies.borrow());
-
+    let uniform_territories = Uniform::new(0, &player.territories.borrow().len() - 1);
     let mut armies_placed = 0;
-    for territory in player.territories.borrow().iter() {
-        let amount = rng.sample(uniform);
-        armies_placed += amount;
-
-        if armies_placed > *player.armies.borrow() {
-            break;
-        }
-
-        if amount > 0 {
-            territories.push(Rc::clone(&board.territories[*territory.index.borrow()]));
-            armies.push(amount);
-        }
-    }
-
     let mut placement = vec![];
-    for (index, territory) in enumerate(territories) {
-        placement.push((territory, armies[index]));
-    }
+    for _ in 0..rng.sample(uniform_territories) {
+        let territory = &player.territories.borrow()[rng.sample(uniform_territories)];
+        let uniform_armies = Uniform::new(0, &*player.armies.borrow() - armies_placed);
+        let armies = rng.sample(uniform_armies);
+        armies_placed += armies;
 
+        if armies > 0 {
+            placement.push((
+                Rc::clone(&board.territories[*territory.index.borrow()]),
+                armies,
+            ));
+        }
+    }
     placement
 }
 
-pub fn attack(player: &PlayerStruct, board: &BoardStruct) -> Option<Attack> {
+/// The random player attacks half of the times
+pub fn attack(player: &PlayerStruct) -> Option<Attack> {
+    let mut rng = thread_rng();
+    if rng.gen::<f32>() < 0.5 {
+        return None;
+    }
+
+    // Create all valid attacks
+    let mut attacks = vec![];
+    for territory in &*player.territories.borrow() {
+        // An attacker should have at least 2 armies
+        if *territory.armies.borrow() >= 2 {
+            for adjacent_territory in &*territory.connections.borrow() {
+                // Can only attack from a territory adjacent to an enemy territory
+                if *adjacent_territory.upgrade().unwrap().get_player().unwrap() != *player {
+                    let dice = Uniform::new(1, min(4, *territory.armies.borrow()));
+                    attacks.push(Attack {
+                        dice: rng.sample(dice),
+                        attacker: Rc::clone(territory),
+                        defender: Rc::clone(&adjacent_territory.upgrade().unwrap()),
+                    })
+                }
+            }
+        }
+    }
+
+    // Pick a random attack from the valid attacks
+    if !attacks.is_empty() {
+        let mut attack = &attacks[0];
+        if !attacks.len() > 1 {
+            let dist = Uniform::new(0, &attacks.len() - 1);
+            attack = &attacks[rng.sample(dist)];
+        }
+        return Some(Attack {
+            dice: attack.dice,
+            attacker: Rc::clone(&attack.attacker),
+            defender: Rc::clone(&attack.defender),
+        });
+    }
     None
 }
 
-pub fn capture(player: &PlayerStruct) -> u32 {
-    1
+pub fn capture(attack: &Attack) -> u32 {
+    if attack.dice == &*attack.attacker.armies.borrow() - 1 {
+        return attack.dice;
+    }
+
+    let mut rng = thread_rng();
+    let uniform = Uniform::new(attack.dice, &*attack.attacker.armies.borrow() - 1);
+    rng.sample(uniform)
 }
 
-pub fn defend(player: &PlayerStruct) -> u32 {
-    1
+pub fn defend(attack: &Attack) -> u32 {
+    if *attack.defender.armies.borrow() == 1 {
+        return 1;
+    }
+
+    let mut rng = thread_rng();
+    let uniform = Uniform::new(1, 2);
+    rng.sample(uniform)
 }
 
 pub fn free_move(player: &PlayerStruct) {

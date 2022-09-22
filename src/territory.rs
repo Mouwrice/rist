@@ -19,7 +19,7 @@ pub struct Territory {
     pub connections: RefCell<Vec<Weak<Territory>>>,
     pub continent: Rc<Continent>,
     pub armies: RefCell<u32>,
-    pub player: RefCell<Option<Weak<PlayerStruct>>>,
+    player: RefCell<Option<Weak<PlayerStruct>>>,
 }
 
 impl Territory {
@@ -51,6 +51,10 @@ impl Territory {
         None
     }
 
+    pub fn set_player(&self, player: Option<Weak<PlayerStruct>>) {
+        *self.player.borrow_mut() = player;
+    }
+
     /// Places given amount from armies on the territory and removes them from the player
     /// Territory must be owned by the player or not owned at all
     pub fn place_armies(&self, player: Rc<PlayerStruct>, armies: u32) {
@@ -58,7 +62,7 @@ impl Territory {
             assert_eq!(occupant, player, "Territory is owned by another player");
         }
         assert!(
-            *player.armies.borrow() > armies,
+            *player.armies.borrow() >= armies,
             "The player does not have enough armies available"
         );
 

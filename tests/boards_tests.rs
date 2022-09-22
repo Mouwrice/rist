@@ -69,7 +69,7 @@ mod claim_territory {
             White,
         ));
 
-        board.claim_territory(0, Rc::clone(&player));
+        board.claim_territory(0, Rc::clone(&player), false);
 
         assert_eq!(*territory.armies.borrow(), 1);
         assert_eq!(*player.armies.borrow(), 0);
@@ -81,8 +81,8 @@ mod claim_territory {
 
         assert_eq!(name, "TestPlayer");
         assert_eq!(territory.continent.territories_per_player.borrow()[0], 1);
-        assert!(player.territories.borrow().contains(&territory));
-        assert!(player.continents.borrow().contains(&continent));
+        assert!(player.get_territories().borrow().contains(&territory));
+        assert!(player.get_continents().borrow().contains(&continent));
     }
 
     #[test]
@@ -105,6 +105,6 @@ mod claim_territory {
             White,
         ));
 
-        board.claim_territory(0, player);
+        board.claim_territory(0, player, false);
     }
 }

@@ -18,17 +18,17 @@ fn test_display() {
     ));
     let player3 = Rc::new(PlayerStruct::new(Unimplemented, "TestPlayer3", Red, White));
 
-    board.claim_territory(0, Rc::clone(&player1));
-    board.claim_territory(0, Rc::clone(&player2));
-    board.claim_territory(0, Rc::clone(&player2));
-    board.claim_territory(0, Rc::clone(&player1));
-    board.claim_territory(0, Rc::clone(&player3));
-    board.claim_territory(0, Rc::clone(&player3));
-    board.claim_territory(0, Rc::clone(&player2));
-    board.claim_territory(0, Rc::clone(&player1));
-    board.claim_territory(0, Rc::clone(&player1));
-    board.claim_territory(0, Rc::clone(&player3));
-    board.claim_territory(0, Rc::clone(&player1));
+    board.claim_territory(0, Rc::clone(&player1), false);
+    board.claim_territory(0, Rc::clone(&player2), false);
+    board.claim_territory(0, Rc::clone(&player2), false);
+    board.claim_territory(0, Rc::clone(&player1), false);
+    board.claim_territory(0, Rc::clone(&player3), false);
+    board.claim_territory(0, Rc::clone(&player3), false);
+    board.claim_territory(0, Rc::clone(&player2), false);
+    board.claim_territory(0, Rc::clone(&player1), false);
+    board.claim_territory(0, Rc::clone(&player1), false);
+    board.claim_territory(0, Rc::clone(&player3), false);
+    board.claim_territory(0, Rc::clone(&player1), false);
 
     board.print_board(Duration::from_secs(0));
 }

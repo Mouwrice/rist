@@ -2,7 +2,6 @@
 //! A player is not allowed to directly mutate the board struct
 
 use std::cell::RefCell;
-use std::collections::HashSet;
 use std::fmt::{Debug, Display, Formatter};
 use std::rc::Rc;
 
@@ -30,8 +29,8 @@ pub struct PlayerStruct {
     pub index: RefCell<usize>,
     pub name: String,
     pub armies: RefCell<u32>,
-    pub territories: RefCell<HashSet<Rc<Territory>>>,
-    pub continents: RefCell<HashSet<Rc<Continent>>>,
+    territories: RefCell<Vec<Rc<Territory>>>,
+    continents: RefCell<Vec<Rc<Continent>>>,
     foreground: Color,
     background: Color,
     pub defeated: RefCell<bool>,
@@ -44,12 +43,40 @@ impl PlayerStruct {
             index: RefCell::from(0),
             name: String::from(name),
             armies: RefCell::from(0),
-            territories: RefCell::from(HashSet::new()),
-            continents: RefCell::from(HashSet::new()),
+            territories: RefCell::from(vec![]),
+            continents: RefCell::from(vec![]),
             foreground,
             background,
             defeated: RefCell::from(false),
         }
+    }
+
+    pub fn get_territories(&self) -> &RefCell<Vec<Rc<Territory>>> {
+        &self.territories
+    }
+
+    pub fn add_territory(&self, territory: Rc<Territory>) {
+        self.territories.borrow_mut().push(territory);
+    }
+
+    pub fn remove_territory(&self, item: &Rc<Territory>) {
+        self.territories
+            .borrow_mut()
+            .retain(|territory| *territory != *item);
+    }
+
+    pub fn get_continents(&self) -> &RefCell<Vec<Rc<Continent>>> {
+        &self.continents
+    }
+
+    pub fn add_continent(&self, continent: Rc<Continent>) {
+        self.continents.borrow_mut().push(continent);
+    }
+
+    pub fn remove_continent(&self, item: &Rc<Continent>) {
+        self.continents
+            .borrow_mut()
+            .retain(|continent| *continent != *item);
     }
 
     /// Color the text to the color of the player
@@ -77,26 +104,27 @@ impl PlayerStruct {
 
     /// Gives the player an option to attack
     /// To end the attacking phase the player returns `None`
-    pub fn attack(&self, board: &BoardStruct) -> Option<Attack> {
+    pub fn attack(&self, _board: &BoardStruct) -> Option<Attack> {
         match &self.player {
-            PlayerType::RandomPlayer => random_player::attack(self, board),
+            PlayerType::RandomPlayer => random_player::attack(self),
             PlayerType::Unimplemented => unimplemented!(),
         }
     }
 
     /// When a player takes a territory it must assign a number of armies to that territory
-    pub fn capture(&self, _attack: &Attack) -> u32 {
+    /// no less than the number of dice rolled
+    pub fn capture(&self, attack: &Attack) -> u32 {
         match &self.player {
-            PlayerType::RandomPlayer => random_player::capture(self),
+            PlayerType::RandomPlayer => random_player::capture(attack),
             PlayerType::Unimplemented => unimplemented!(),
         }
     }
 
     /// Called when the player is being attacked
     /// The player must return with how many dice it wishes to defend its territory
-    pub fn defend(&self, _attack: &Attack) -> u32 {
+    pub fn defend(&self, attack: &Attack) -> u32 {
         match &self.player {
-            PlayerType::RandomPlayer => random_player::defend(self),
+            PlayerType::RandomPlayer => random_player::defend(attack),
             PlayerType::Unimplemented => unimplemented!(),
         }
     }

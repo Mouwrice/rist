@@ -116,8 +116,8 @@ impl BoardStruct {
         territory.place_armies(Rc::clone(&player), 1);
 
         // Assign territory to player
-        *territory.player.borrow_mut() = Some(Rc::downgrade(&player));
-        player.territories.borrow_mut().insert(Rc::clone(territory));
+        territory.set_player(Some(Rc::downgrade(&player)));
+        player.add_territory(Rc::clone(territory));
 
         if verbose {
             self.set_extra_info(format!("{} claimed {}", player.name, territory.name));
@@ -128,7 +128,7 @@ impl BoardStruct {
         let continent = &self.continents[continent_index];
         continent.territories_per_player.borrow_mut()[*player.index.borrow()] += 1;
         if continent.territories_per_player.borrow()[*player.index.borrow()] == continent.size {
-            player.continents.borrow_mut().insert(Rc::clone(continent));
+            player.add_continent(Rc::clone(continent));
 
             if verbose {
                 self.set_extra_info(format!(
