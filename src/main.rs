@@ -14,7 +14,7 @@ fn main() {
         Rc::new(PlayerStruct::new(RandomPlayer, "Player 4", White, Black)),
     ];
 
-    let board = BoardStruct::new(ClassicBoard, players.len());
+    let board = BoardStruct::new(ClassicBoard, players.len(), None);
     let mut game = Game::new(players, board);
     game.setup(false);
 

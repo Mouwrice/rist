@@ -1,5 +1,6 @@
 //! The original classic Risk board
 use std::rc::Rc;
+use std::time::Duration;
 
 use colored::Colorize;
 
@@ -8,7 +9,7 @@ use crate::boards::BoardType::ClassicBoard;
 use crate::continent::Continent;
 use crate::territory::Territory;
 
-pub fn new(players: usize) -> BoardStruct {
+pub fn new(players: usize, print_duration: Option<Duration>) -> BoardStruct {
     // CONTINENTS
     let north_america = Rc::new(Continent::new("North America", players, 5, 9));
     let europe = Rc::new(Continent::new("Europe", players, 5, 7));
@@ -257,6 +258,7 @@ pub fn new(players: usize) -> BoardStruct {
             &madagascar,
         ],
         6,
+        print_duration,
     )
 }
 
@@ -274,9 +276,19 @@ pub fn print_board(board: &BoardStruct) {
             n.push(format!("* {:5} *", territory.abbr).white());
             s.push("*******".white());
         } else if let Some(player) = territory.get_player() {
-            n.push(player.colorize(format!("* {:5} *", territory.abbr)));
-            a.push(player.colorize(format!("* {:05} *", territory.armies.borrow())));
-            s.push(player.colorize(String::from("*******")));
+            if *territory.armies.borrow() == 0 {
+                n.push(player.colorize(format!("* {:5} *", territory.abbr)).blink());
+                a.push(
+                    player
+                        .colorize(format!("* {:05} *", territory.armies.borrow()))
+                        .blink(),
+                );
+                s.push(player.colorize(String::from("*******")).blink());
+            } else {
+                n.push(player.colorize(format!("* {:5} *", territory.abbr)));
+                a.push(player.colorize(format!("* {:05} *", territory.armies.borrow())));
+                s.push(player.colorize(String::from("*******")));
+            }
         }
     }
 

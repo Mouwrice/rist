@@ -36,6 +36,7 @@ fn test_new_board_struct() {
             &territory5,
         ],
         0,
+        None,
     );
 
     println!("{:#?}", board);
@@ -60,6 +61,7 @@ mod claim_territory {
             vec![&continent],
             vec![&territory],
             0,
+            None,
         );
 
         let player = Rc::new(PlayerStruct::new(
@@ -96,6 +98,7 @@ mod claim_territory {
             vec![&continent],
             vec![&territory],
             0,
+            None,
         );
 
         let player = Rc::new(PlayerStruct::new(

@@ -17,8 +17,8 @@ fn test_roll_dice() {
 #[test]
 fn test_player_rolls_dice() {
     let player = PlayerStruct::new(RandomPlayer, "TestPlayer", Magenta, White);
-    assert!((1..=6).contains(&dice::player_rolls_dice(&player, 1)[0]));
-    for roll in dice::player_rolls_dice(&player, 10) {
+    assert!((1..=6).contains(&dice::player_rolls_dice(&player, 1, true)[0]));
+    for roll in dice::player_rolls_dice(&player, 10, true) {
         assert!((1..=6).contains(&roll));
     }
 }
@@ -38,7 +38,7 @@ fn test_players_roll_die() {
         Magenta,
         White,
     ));
-    for roll in dice::players_roll_die(&vec![&player1, &player2]) {
+    for roll in dice::players_roll_die(&vec![&player1, &player2], true) {
         assert!((1..=6).contains(&roll));
     }
 }

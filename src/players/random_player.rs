@@ -1,12 +1,13 @@
-use crate::Attack;
-use rand::distributions::Uniform;
-use rand::{thread_rng, Rng};
 use std::cmp::min;
 use std::rc::Rc;
+
+use rand::distributions::Uniform;
+use rand::{thread_rng, Rng};
 
 use crate::boards::BoardStruct;
 use crate::players::PlayerStruct;
 use crate::territory::Territory;
+use crate::Attack;
 
 pub fn claim_territory(board: &BoardStruct) -> usize {
     let distribution = Uniform::new_inclusive(0, &board.free_territories.len() - 1);
@@ -63,11 +64,8 @@ pub fn attack(player: &PlayerStruct) -> Option<Attack> {
 
     // Pick a random attack from the valid attacks
     if !attacks.is_empty() {
-        let mut attack = &attacks[0];
-        if !attacks.len() > 1 {
-            let dist = Uniform::new(0, &attacks.len());
-            attack = &attacks[rng.sample(dist)];
-        }
+        let dist = Uniform::new(0, &attacks.len());
+        let attack = &attacks[rng.sample(dist)];
         return Some(Attack {
             dice: attack.dice,
             attacker: Rc::clone(&attack.attacker),
@@ -80,7 +78,7 @@ pub fn attack(player: &PlayerStruct) -> Option<Attack> {
 pub fn capture(attack: &Attack) -> u32 {
     let mut rng = thread_rng();
     let uniform = Uniform::new(
-        min(attack.dice, &*attack.attacker.armies.borrow() - 1),
+        min(attack.dice, *attack.attacker.armies.borrow()),
         &*attack.attacker.armies.borrow(),
     );
     rng.sample(uniform)
@@ -92,7 +90,7 @@ pub fn defend(attack: &Attack) -> u32 {
     }
 
     let mut rng = thread_rng();
-    let uniform = Uniform::new(1, 2);
+    let uniform = Uniform::new(1, 3);
     rng.sample(uniform)
 }
 

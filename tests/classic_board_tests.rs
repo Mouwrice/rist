@@ -8,7 +8,7 @@ use std::time::Duration;
 /// Visual test to test the display of the board
 #[test]
 fn test_display() {
-    let mut board = classic_board::new(4);
+    let mut board = classic_board::new(4, None);
     let player1 = Rc::new(PlayerStruct::new(Unimplemented, "TestPlayer1", Blue, White));
     let player2 = Rc::new(PlayerStruct::new(
         Unimplemented,
@@ -30,5 +30,5 @@ fn test_display() {
     board.claim_territory(0, Rc::clone(&player3), false);
     board.claim_territory(0, Rc::clone(&player1), false);
 
-    board.print_board(Duration::from_secs(0));
+    board.print_board();
 }

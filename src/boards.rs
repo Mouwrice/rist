@@ -6,8 +6,8 @@
 //! This module provides default implementations that can be used if you so wish.
 use std::cell::RefCell;
 use std::rc::Rc;
-use std::thread;
 use std::time::Duration;
+use std::{io, thread};
 
 use crate::continent::Continent;
 use crate::players::PlayerStruct;
@@ -36,14 +36,15 @@ pub struct BoardStruct {
     /// The maximum of extra info lines that are available
     /// Force prints the board when full and clears the extra lines afterwards
     extra_info_lines: usize,
+    print_duration: Option<Duration>,
 }
 
 /// Provides a default implementation according to the standard ruleset
 /// You are free to not use these functions and implement a different behaviour to your liking
 impl BoardStruct {
-    pub fn new(board: BoardType, players: usize) -> BoardStruct {
+    pub fn new(board: BoardType, players: usize, print_duration: Option<Duration>) -> BoardStruct {
         match board {
-            BoardType::ClassicBoard => classic_board::new(players),
+            BoardType::ClassicBoard => classic_board::new(players, print_duration),
             BoardType::Unimplemented => unimplemented!(),
         }
     }
@@ -54,6 +55,7 @@ impl BoardStruct {
         continents: Vec<&Rc<Continent>>,
         territories: Vec<&Rc<Territory>>,
         extra_info_lines: usize,
+        print_duration: Option<Duration>,
     ) -> BoardStruct {
         continent::generate_ids(&continents);
         territory::generate_ids(&territories);
@@ -75,6 +77,7 @@ impl BoardStruct {
             free_territories,
             extra_info: RefCell::from(vec![]),
             extra_info_lines,
+            print_duration,
         }
     }
 
@@ -139,7 +142,7 @@ impl BoardStruct {
         }
 
         if verbose {
-            self.print_board(Duration::from_millis(500));
+            self.print_board();
             self.clear_extra_info();
         }
     }
@@ -148,7 +151,7 @@ impl BoardStruct {
     pub fn set_extra_info(&self, text: String) {
         self.extra_info.borrow_mut().push(text);
         if self.extra_info.borrow().len() >= self.extra_info_lines {
-            self.print_board(Duration::from_millis(500));
+            self.print_board();
             self.clear_extra_info();
         }
     }
@@ -159,13 +162,22 @@ impl BoardStruct {
     }
 
     /// Prints the board to stdout
-    pub fn print_board(&self, dur: Duration) {
+    /// If `None` Duration is specified waits on `enter` input key to continue
+    pub fn print_board(&self) {
         // Clears the terminal
         print!("{esc}[2J{esc}[1;1H", esc = 27 as char);
         match self.board {
             BoardType::ClassicBoard => classic_board::print_board(self),
             BoardType::Unimplemented => unimplemented!(),
         }
-        thread::sleep(dur);
+        if let Some(dur) = self.print_duration {
+            thread::sleep(dur);
+        } else {
+            let mut buffer = String::new();
+            let stdin = io::stdin(); // We get `Stdin` here.
+            stdin
+                .read_line(&mut buffer)
+                .expect("Did not enter a valid string");
+        }
     }
 }

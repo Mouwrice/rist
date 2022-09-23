@@ -83,7 +83,7 @@ impl Game {
         let mut player = &self.players[first_player(&self.players.iter().collect(), verbose)];
         if verbose {
             println!("{} may begin!\n", player.name);
-            self.board.print_board(Duration::from_secs(1));
+            self.board.print_board();
         }
 
         while !self.board.free_territories.is_empty() {
@@ -163,7 +163,7 @@ impl Game {
                 if verbose {
                     self.board
                         .set_extra_info(format!("TURN {turn}: {}", player.name));
-                    self.board.print_board(Duration::from_millis(500));
+                    self.board.print_board();
                     self.board.clear_extra_info();
                 }
 
@@ -233,7 +233,7 @@ impl Game {
             if verbose {
                 self.board
                     .set_extra_info(String::from("No more armies available in the box."));
-                self.board.print_board(Duration::from_millis(500));
+                self.board.print_board();
                 self.board.clear_extra_info();
             }
 
@@ -281,7 +281,7 @@ impl Game {
                 "{} has received a total of {armies} armies.",
                 player.name,
             ));
-            self.board.print_board(Duration::from_millis(500));
+            self.board.print_board();
             self.board.clear_extra_info();
         }
     }
@@ -298,7 +298,7 @@ impl Game {
         if placement.is_empty() {
             if verbose {
                 self.board.set_extra_info(String::from("No armies placed."));
-                self.board.print_board(Duration::from_millis(500));
+                self.board.print_board();
                 self.board.clear_extra_info();
             }
             return;
@@ -318,7 +318,7 @@ impl Game {
         }
 
         if verbose {
-            self.board.print_board(Duration::from_millis(1000));
+            self.board.print_board();
             self.board.clear_extra_info();
         }
     }
@@ -359,8 +359,13 @@ impl Game {
 
             if verbose {
                 self.board.set_extra_info(format!(
-                    "{} attacks {}",
-                    attack.attacker.name, attack.defender.name
+                    "{} attacks {} with {} armies",
+                    attack.attacker.name, attack.defender.name, attack.dice
+                ));
+                self.board.set_extra_info(String::from(""));
+                self.board.set_extra_info(format!(
+                    "{} defends with {} armies",
+                    attack.defender.name, defense
                 ));
                 self.board.set_extra_info(String::from(""));
             }
@@ -432,7 +437,7 @@ impl Game {
                 assert!(capture < *attack.attacker.armies.borrow(), "Not enough armies on territory. No territory may ever be left unoccupied at any time during the game.");
 
                 if verbose {
-                    self.board.print_board(Duration::from_secs(1));
+                    self.board.print_board();
                     self.board.clear_extra_info();
                 }
 
@@ -470,7 +475,7 @@ impl Game {
                             "{} has taken over the entirety of {}",
                             aggressor.name, attack.defender.continent.name
                         ));
-                        self.board.print_board(Duration::from_secs(1));
+                        self.board.print_board();
                         self.board.clear_extra_info();
                     }
                 }
@@ -485,7 +490,7 @@ impl Game {
                             "{} IS DEFEATED BY {}!",
                             defender.name, aggressor.name
                         ));
-                        self.board.print_board(Duration::from_secs(2));
+                        self.board.print_board();
                         self.board.clear_extra_info();
                     }
                 }
@@ -497,7 +502,7 @@ impl Game {
             }
 
             if verbose {
-                self.board.print_board(Duration::from_millis(1000));
+                self.board.print_board();
                 self.board.clear_extra_info();
             }
         }
