@@ -16,7 +16,7 @@ fn main() {
 
     let board = BoardStruct::new(ClassicBoard, players.len(), None);
     let mut game = Game::new(players, board);
-    game.setup(false);
+    game.setup(true);
 
-    game.play(None, Some(1000000), false, true);
+    game.play(None, Some(100), false, true);
 }
