@@ -1,13 +1,12 @@
 use colored::Color::{Blue, White};
-use rist::players::PlayerStruct;
-use rist::players::PlayerType::Unimplemented;
+use rist::players::{Player, RandomPlayer};
 use std::rc::Rc;
 
 /// Test string coloring
 
 #[test]
 fn test_colorize() {
-    let player = Rc::new(PlayerStruct::new(Unimplemented, "TestPlayer", Blue, White));
+    let player = Rc::new(RandomPlayer::new("TestPlayer", Blue, White));
 
-    println!("{}", player.colorize(String::from("I am Blue")));
+    println!("{}", player.get_state().colorize(String::from("I am Blue")));
 }

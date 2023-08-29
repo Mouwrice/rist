@@ -7,7 +7,7 @@ use std::rc::{Rc, Weak};
 use itertools::enumerate;
 
 use crate::continent::Continent;
-use crate::players::PlayerStruct;
+use crate::players::Player;
 
 #[derive(Debug)]
 /// Represents a singular Risk Territory.
@@ -19,7 +19,7 @@ pub struct Territory {
     pub connections: RefCell<Vec<Weak<Territory>>>,
     pub continent: Rc<Continent>,
     pub armies: RefCell<u32>,
-    player: RefCell<Option<Weak<PlayerStruct>>>,
+    player: RefCell<Option<Weak<dyn Player>>>,
 }
 
 impl Territory {
@@ -43,7 +43,7 @@ impl Territory {
             .collect();
     }
 
-    pub fn get_player(&self) -> Option<Rc<PlayerStruct>> {
+    pub fn get_player(&self) -> Option<Rc<dyn Player>> {
         if let Some(weak) = &*self.player.borrow() {
             let player = weak.upgrade();
             return player;
@@ -51,15 +51,20 @@ impl Territory {
         None
     }
 
-    pub fn set_player(&self, player: Option<Weak<PlayerStruct>>) {
+    pub fn set_player(&self, player: Option<Weak<dyn Player>>) {
         *self.player.borrow_mut() = player;
     }
 
     /// Places given amount from armies on the territory and removes them from the player
     /// Territory must be owned by the player or not owned at all
-    pub fn place_armies(&self, player: Rc<PlayerStruct>, armies: u32) {
+    pub fn place_armies(&self, player: Rc<dyn Player>, armies: u32) {
+        let player = player.get_state();
         if let Some(occupant) = self.get_player() {
-            assert_eq!(occupant, player, "Territory is owned by another player");
+            assert_eq!(
+                occupant.get_state(),
+                player,
+                "Territory is owned by another player"
+            );
         }
         assert!(
             *player.armies.borrow() >= armies,
@@ -83,7 +88,7 @@ impl Display for Territory {
 
         let mut player_name = String::from("None");
         if let Some(player) = self.get_player() {
-            player_name = String::from(&player.name);
+            player_name = String::from(&player.get_state().name);
         }
 
         write!(
