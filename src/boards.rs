@@ -10,7 +10,7 @@ use std::time::Duration;
 use std::{io, thread};
 
 use crate::continent::Continent;
-use crate::players::PlayerStruct;
+use crate::players::Player;
 use crate::territory::Territory;
 use crate::{continent, territory};
 
@@ -89,26 +89,27 @@ impl BoardStruct {
     pub fn claim_territory(
         &mut self,
         free_territory_index: usize,
-        player: Rc<PlayerStruct>,
+        player: Rc<dyn Player>,
         verbose: bool,
     ) {
         // Territory lookup
         let territory_index = self.free_territories[free_territory_index];
         let territory = &self.territories[territory_index];
 
+        let state = player.get_state();
         // The player needs to have one army available to claim a territory
         assert!(
-            *player.armies.borrow() >= 1,
+            *state.armies.borrow() >= 1,
             "The player should have at least 1 army in it's inventory. {} has {} remaining",
-            player.name,
-            player.armies.borrow()
+            state.name,
+            state.armies.borrow()
         );
 
         // The player cannot claim a territory that is already occupied
         assert!(
             territory.get_player().is_none(),
             "The territory is already occupied. {} tried to claim {}",
-            player.name,
+            state.name,
             territory.name
         );
 
@@ -120,23 +121,30 @@ impl BoardStruct {
 
         // Assign territory to player
         territory.set_player(Some(Rc::downgrade(&player)));
-        player.add_territory(Rc::clone(territory));
+        player.get_state().add_territory(Rc::clone(territory));
 
         if verbose {
-            self.set_extra_info(format!("{} claimed {}", player.name, territory.name));
+            self.set_extra_info(format!(
+                "{} claimed {}",
+                player.get_state().name,
+                territory.name
+            ));
         }
 
         // Assign part of continent to player
         let continent_index = *territory.continent.index.borrow();
         let continent = &self.continents[continent_index];
-        continent.territories_per_player.borrow_mut()[*player.index.borrow()] += 1;
-        if continent.territories_per_player.borrow()[*player.index.borrow()] == continent.size {
-            player.add_continent(Rc::clone(continent));
+        continent.territories_per_player.borrow_mut()[*player.get_state().index.borrow()] += 1;
+        if continent.territories_per_player.borrow()[*player.get_state().index.borrow()]
+            == continent.size
+        {
+            player.get_state().add_continent(Rc::clone(continent));
 
             if verbose {
                 self.set_extra_info(format!(
                     "{} has claimed the entirety of {}",
-                    player.name, continent.name
+                    player.get_state().name,
+                    continent.name
                 ));
             }
         }

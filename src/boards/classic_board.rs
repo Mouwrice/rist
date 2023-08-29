@@ -276,6 +276,7 @@ pub fn print_board(board: &BoardStruct) {
             n.push(format!("* {:5} *", territory.abbr).white());
             s.push("*******".white());
         } else if let Some(player) = territory.get_player() {
+            let player = player.get_state();
             if *territory.armies.borrow() == 0 {
                 n.push(player.colorize(format!("* {:5} *", territory.abbr)).blink());
                 a.push(

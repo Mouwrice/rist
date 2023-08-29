@@ -8,7 +8,7 @@ use itertools::enumerate;
 
 use crate::boards::BoardStruct;
 use crate::dice::{player_rolls_dice, players_roll_die};
-use crate::players::PlayerStruct;
+use crate::players::Player;
 use crate::territory::Territory;
 
 pub mod boards;
@@ -24,14 +24,14 @@ pub struct Attack {
 }
 
 pub struct Game {
-    players: Vec<Rc<PlayerStruct>>,
+    players: Vec<Rc<dyn Player>>,
     board: BoardStruct,
     defeated_players: usize,
     armies_in_box: RefCell<Vec<u32>>,
 }
 
 impl Game {
-    pub fn new(players: Vec<Rc<PlayerStruct>>, board: BoardStruct) -> Game {
+    pub fn new(players: Vec<Rc<dyn Player>>, board: BoardStruct) -> Game {
         let armies_in_box: Vec<u32> = players.iter().map(|_| 180).collect();
         players::generate_ids(&players);
         Game {
@@ -68,12 +68,13 @@ impl Game {
 
         // Every player receives initial amount of armies
         for player in &*self.players {
-            *player.armies.borrow_mut() = armies_per_player;
+            let state = player.get_state();
+            *state.armies.borrow_mut() = armies_per_player;
             assert!(
-                self.armies_in_box.borrow()[*player.index.borrow()] >= armies_per_player,
+                self.armies_in_box.borrow()[*state.index.borrow()] >= armies_per_player,
                 "Not enough armies in the box"
             );
-            self.armies_in_box.borrow_mut()[*player.index.borrow()] -= armies_per_player;
+            self.armies_in_box.borrow_mut()[*state.index.borrow()] -= armies_per_player;
         }
 
         // Decide who gets to go first
@@ -82,16 +83,16 @@ impl Game {
         }
         let mut player = &self.players[first_player(&self.players.iter().collect(), verbose)];
         if verbose {
-            println!("{} may begin!\n", player.name);
+            println!("{} may begin!\n", player.get_state().name);
             self.board.print_board();
         }
 
         while !self.board.free_territories.is_empty() {
             assert!(
-                self.armies_in_box.borrow()[*player.index.borrow()] > 0,
+                self.armies_in_box.borrow()[*player.get_state().index.borrow()] > 0,
                 "Not enough armies in the box., Tried to take {} armies when only {} were available.",
                 1,
-                self.armies_in_box.borrow()[*player.index.borrow()]
+                self.armies_in_box.borrow()[*player.get_state().index.borrow()]
             );
 
             let free_territory_index = player.claim_territory(&self.board);
@@ -99,7 +100,7 @@ impl Game {
                 .claim_territory(free_territory_index, Rc::clone(player), verbose);
 
             // Get the next player
-            player = &self.players[(&*player.index.borrow() + 1) % self.players.len()];
+            player = &self.players[(&*player.get_state().index.borrow() + 1) % self.players.len()];
         }
 
         for continent in &self.board.continents {
@@ -159,10 +160,10 @@ impl Game {
                 }
             }
 
-            if !*player.defeated.borrow() {
+            if !*player.get_state().defeated.borrow() {
                 if verbose {
                     self.board
-                        .set_extra_info(format!("TURN {turn}: {}", player.name));
+                        .set_extra_info(format!("TURN {turn}: {}", player.get_state().name));
                     self.board.print_board();
                     self.board.clear_extra_info();
                 }
@@ -172,7 +173,7 @@ impl Game {
                 self.army_placement(player, verbose);
 
                 for defeated in self.attack(Rc::clone(player), verbose).iter() {
-                    *defeated.defeated.borrow_mut() = true;
+                    *defeated.get_state().defeated.borrow_mut() = true;
                     self.defeated_players += 1;
                 }
 
@@ -183,15 +184,17 @@ impl Game {
                             "Oops. Not all territories are occupied by the winner..."
                         );
                         assert_eq!(
-                            territory.get_player().unwrap(),
-                            *player,
+                            territory.get_player().unwrap().get_state(),
+                            player.get_state(),
                             "Oops. Not all territories are occupied by the winner..."
                         )
                     }
 
                     if verbose {
-                        self.board
-                            .set_extra_info(format!("{} HAS WON THE GAME!", player.name));
+                        self.board.set_extra_info(format!(
+                            "{} HAS WON THE GAME!",
+                            player.get_state().name
+                        ));
                     }
 
                     break;
@@ -207,7 +210,7 @@ impl Game {
             }
 
             // Get the next player
-            player = &self.players[(&*player.index.borrow() + 1) % self.players.len()];
+            player = &self.players[(&*player.get_state().index.borrow() + 1) % self.players.len()];
         }
 
         if let Some(bar) = progressbar {
@@ -221,7 +224,7 @@ impl Game {
 
     /// Calculates how much armies a player is received upon starting its turn
     /// A player is entitled to its amount of territories divided by 3 and reaches a minimum of 3 armies if possible
-    fn army_accumulation(&self, player: &Rc<PlayerStruct>, verbose: bool) {
+    fn army_accumulation(&self, player: &Rc<dyn Player>, verbose: bool) {
         if verbose {
             self.board
                 .set_extra_info(String::from("Army Accumulation:"));
@@ -229,7 +232,7 @@ impl Game {
         }
 
         // Out of armies
-        if self.armies_in_box.borrow()[*player.index.borrow()] == 0 {
+        if self.armies_in_box.borrow()[*player.get_state().index.borrow()] == 0 {
             if verbose {
                 self.board
                     .set_extra_info(String::from("No more armies available in the box."));
@@ -241,22 +244,25 @@ impl Game {
         }
 
         let mut armies = min(
-            self.armies_in_box.borrow()[*player.index.borrow()],
-            max(3, player.get_territories().borrow().len() as u32 / 3),
+            self.armies_in_box.borrow()[*player.get_state().index.borrow()],
+            max(
+                3,
+                player.get_state().get_territories().borrow().len() as u32 / 3,
+            ),
         );
 
         if verbose {
             self.board.set_extra_info(format!(
                 "{} receives {armies} for occupying {} territories.",
-                player.name,
-                player.get_territories().borrow().len()
+                player.get_state().name,
+                player.get_state().get_territories().borrow().len()
             ));
         }
 
         // Per continent rewards
-        for continent in player.get_continents().borrow().iter() {
+        for continent in player.get_state().get_continents().borrow().iter() {
             let extra = min(
-                self.armies_in_box.borrow()[*player.index.borrow()] - armies,
+                self.armies_in_box.borrow()[*player.get_state().index.borrow()] - armies,
                 continent.armies_reward,
             );
             armies += extra;
@@ -264,29 +270,30 @@ impl Game {
             if verbose {
                 self.board.set_extra_info(format!(
                     "{} receives {extra} armies for occupying the entirety of {}.",
-                    player.name, continent.name
+                    player.get_state().name,
+                    continent.name
                 ));
             }
         }
 
         // Assign armies
-        *player.armies.borrow_mut() += armies;
+        *player.get_state().armies.borrow_mut() += armies;
 
         // Remove assigned armies from the box
-        self.assert_enough_armies(*player.index.borrow(), armies);
-        self.armies_in_box.borrow_mut()[*player.index.borrow()] -= armies;
+        self.assert_enough_armies(*player.get_state().index.borrow(), armies);
+        self.armies_in_box.borrow_mut()[*player.get_state().index.borrow()] -= armies;
 
         if verbose {
             self.board.set_extra_info(format!(
                 "{} has received a total of {armies} armies.",
-                player.name,
+                player.get_state().name,
             ));
             self.board.print_board();
             self.board.clear_extra_info();
         }
     }
 
-    fn army_placement(&self, player: &Rc<PlayerStruct>, verbose: bool) {
+    fn army_placement(&self, player: &Rc<dyn Player>, verbose: bool) {
         if verbose {
             self.board.clear_extra_info();
             self.board.set_extra_info(String::from("Army Placement:"));
@@ -306,7 +313,7 @@ impl Game {
 
         if verbose {
             self.board
-                .set_extra_info(format!("{} places armies on:", player.name));
+                .set_extra_info(format!("{} places armies on:", player.get_state().name));
         }
 
         for (territory, armies) in placement.iter() {
@@ -325,7 +332,7 @@ impl Game {
 
     /// Attacking phase
     /// Returns a list of defeated players
-    fn attack(&self, player: Rc<PlayerStruct>, verbose: bool) -> Vec<Rc<PlayerStruct>> {
+    fn attack(&self, player: Rc<dyn Player>, verbose: bool) -> Vec<Rc<dyn Player>> {
         let mut defeated = vec![];
 
         while let Some(attack) = player.attack(&self.board) {
@@ -335,9 +342,10 @@ impl Game {
             let aggressor = attack.attacker.get_player().unwrap();
 
             assert_eq!(
-                aggressor, player,
+                aggressor.get_state(),
+                player.get_state(),
                 "The attacking territory is not claimed by {}",
-                player.name
+                player.get_state().name
             );
 
             assert!(0 < attack.dice && attack.dice < *attack.attacker.armies.borrow(), "Number of dies should be between 1 and 3 and one less than the amount of armies on the territory.\narmies: {}\ndie: {}\n", *attack.attacker.armies.borrow(), attack.dice);
@@ -347,13 +355,14 @@ impl Game {
             let defender = attack.defender.get_player().unwrap();
 
             assert_ne!(
-                aggressor, defender,
+                aggressor.get_state(),
+                defender.get_state(),
                 "You cannot attack a territory you own."
             );
 
             let defense = defender.defend(&attack);
             assert!(
-                0 < defense && defense <= max(2, *aggressor.armies.borrow()),
+                0 < defense && defense <= max(2, *aggressor.get_state().armies.borrow()),
                 "Incorrect number of dice used by the defender."
             );
 
@@ -371,8 +380,8 @@ impl Game {
             }
 
             // Simulate dice rolls
-            let mut attacker_rolls = player_rolls_dice(&aggressor, attack.dice, false);
-            let mut defender_rolls = player_rolls_dice(&defender, defense, false);
+            let mut attacker_rolls = player_rolls_dice(aggressor.as_ref(), attack.dice, false);
+            let mut defender_rolls = player_rolls_dice(defender.as_ref(), defense, false);
 
             attacker_rolls.sort();
             defender_rolls.sort();
@@ -392,8 +401,10 @@ impl Game {
             *attack.defender.armies.borrow_mut() -= defender_losses;
 
             // Add killed armies back into the box
-            self.armies_in_box.borrow_mut()[*aggressor.index.borrow()] += attacker_losses;
-            self.armies_in_box.borrow_mut()[*defender.index.borrow()] += defender_losses;
+            self.armies_in_box.borrow_mut()[*aggressor.get_state().index.borrow()] +=
+                attacker_losses;
+            self.armies_in_box.borrow_mut()[*defender.get_state().index.borrow()] +=
+                defender_losses;
 
             if verbose {
                 self.board.set_extra_info(format!(
@@ -420,15 +431,20 @@ impl Game {
 
                 // The defender loses a continent
                 if defender
+                    .get_state()
                     .get_continents()
                     .borrow()
                     .contains(&attack.defender.continent)
                 {
-                    defender.remove_continent(&attack.defender.continent);
+                    defender
+                        .get_state()
+                        .remove_continent(&attack.defender.continent);
                 }
 
-                defender.remove_territory(&attack.defender);
-                aggressor.add_territory(Rc::clone(&attack.defender));
+                defender.get_state().remove_territory(&attack.defender);
+                aggressor
+                    .get_state()
+                    .add_territory(Rc::clone(&attack.defender));
 
                 attack.defender.set_player(Some(Rc::downgrade(&aggressor)));
 
@@ -446,34 +462,37 @@ impl Game {
                 *attack.attacker.armies.borrow_mut() -= capture;
 
                 if attack.defender.continent.territories_per_player.borrow()
-                    [*defender.index.borrow()]
+                    [*defender.get_state().index.borrow()]
                     == 0
                 {
                     println!("{}", attack.defender.continent);
-                    println!("{}", defender);
+                    println!("{}", defender.get_state());
                 }
                 attack
                     .defender
                     .continent
                     .territories_per_player
-                    .borrow_mut()[*defender.index.borrow()] -= 1;
+                    .borrow_mut()[*defender.get_state().index.borrow()] -= 1;
                 attack
                     .defender
                     .continent
                     .territories_per_player
-                    .borrow_mut()[*aggressor.index.borrow()] += 1;
+                    .borrow_mut()[*aggressor.get_state().index.borrow()] += 1;
 
                 // The attacker captures an entire continent
                 if attack.defender.continent.territories_per_player.borrow()
-                    [*aggressor.index.borrow()]
+                    [*aggressor.get_state().index.borrow()]
                     == attack.defender.continent.size
                 {
-                    aggressor.add_continent(Rc::clone(&attack.defender.continent));
+                    aggressor
+                        .get_state()
+                        .add_continent(Rc::clone(&attack.defender.continent));
 
                     if verbose {
                         self.board.set_extra_info(format!(
                             "{} has taken over the entirety of {}",
-                            aggressor.name, attack.defender.continent.name
+                            aggressor.get_state().name,
+                            attack.defender.continent.name
                         ));
                         self.board.print_board();
                         self.board.clear_extra_info();
@@ -481,14 +500,15 @@ impl Game {
                 }
 
                 // The defender has no more territories and is thus defeated
-                if defender.get_territories().borrow().is_empty() {
+                if defender.get_state().get_territories().borrow().is_empty() {
                     // Remove the defeated player from the list of players
                     defeated.push(Rc::clone(&defender));
 
                     if verbose {
                         self.board.set_extra_info(format!(
                             "{} IS DEFEATED BY {}!",
-                            defender.name, aggressor.name
+                            defender.get_state().name,
+                            aggressor.get_state().name
                         ));
                         self.board.print_board();
                         self.board.clear_extra_info();
@@ -497,7 +517,8 @@ impl Game {
             } else if verbose {
                 self.board.set_extra_info(format!(
                     "{} was not able to take {}.",
-                    aggressor.name, attack.defender.name
+                    aggressor.get_state().name,
+                    attack.defender.name
                 ));
             }
 
@@ -509,13 +530,13 @@ impl Game {
         defeated
     }
 
-    fn free_move(&self, player: &Rc<PlayerStruct>, _verbose: bool) {
-        player.free_move();
+    fn free_move(&self, _player: &Rc<dyn Player>, _verbose: bool) {
+        // TODO: Implement free move
     }
 }
 
 /// Decides which player gets to go first based on random dice rolls
-pub fn first_player(players: &Vec<&Rc<PlayerStruct>>, verbose: bool) -> usize {
+pub fn first_player(players: &Vec<&Rc<dyn Player>>, verbose: bool) -> usize {
     let mut rolls = players_roll_die(players, verbose);
     let mut players_index: Vec<usize> = vec![];
     for (index, _) in enumerate(players) {

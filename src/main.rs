@@ -1,17 +1,17 @@
 use colored::Color::{Black, Blue, Green, Red, White};
 use rist::boards::BoardStruct;
 use rist::boards::BoardType::ClassicBoard;
-use rist::players::PlayerStruct;
-use rist::players::PlayerType::RandomPlayer;
+use rist::players::random_player::RandomPlayer;
+use rist::players::Player;
 use rist::Game;
 use std::rc::Rc;
 
 fn main() {
-    let players = vec![
-        Rc::new(PlayerStruct::new(RandomPlayer, "Player 1", Red, White)),
-        Rc::new(PlayerStruct::new(RandomPlayer, "Player 2", Green, White)),
-        Rc::new(PlayerStruct::new(RandomPlayer, "Player 3", Blue, White)),
-        Rc::new(PlayerStruct::new(RandomPlayer, "Player 4", White, Black)),
+    let players: Vec<Rc<dyn Player>> = vec![
+        Rc::new(RandomPlayer::new("Player 1", Red, White)),
+        Rc::new(RandomPlayer::new("Player 2", Green, White)),
+        Rc::new(RandomPlayer::new("Player 3", Blue, White)),
+        Rc::new(RandomPlayer::new("Player 4", White, Black)),
     ];
 
     let board = BoardStruct::new(ClassicBoard, players.len(), None);
