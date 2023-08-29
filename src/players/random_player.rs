@@ -22,7 +22,7 @@ pub fn place_armies(player: &PlayerStruct, board: &BoardStruct) -> Vec<(Rc<Terri
     let mut placement = vec![];
     for _ in 0..rng.sample(uniform_territories) {
         let territory = &player.territories.borrow()[rng.sample(uniform_territories)];
-        let uniform_armies = Uniform::new(0, &*player.armies.borrow() - armies_placed);
+        let uniform_armies = Uniform::new(0, *player.armies.borrow() - armies_placed);
         let armies = rng.sample(uniform_armies);
         armies_placed += armies;
 
@@ -64,7 +64,7 @@ pub fn attack(player: &PlayerStruct) -> Option<Attack> {
 
     // Pick a random attack from the valid attacks
     if !attacks.is_empty() {
-        let dist = Uniform::new(0, &attacks.len());
+        let dist = Uniform::new(0, attacks.len());
         let attack = &attacks[rng.sample(dist)];
         return Some(Attack {
             dice: attack.dice,
@@ -79,7 +79,7 @@ pub fn capture(attack: &Attack) -> u32 {
     let mut rng = thread_rng();
     let uniform = Uniform::new(
         min(attack.dice, *attack.attacker.armies.borrow()),
-        &*attack.attacker.armies.borrow(),
+        *attack.attacker.armies.borrow(),
     );
     rng.sample(uniform)
 }

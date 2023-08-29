@@ -256,7 +256,7 @@ impl Game {
         // Per continent rewards
         for continent in player.get_continents().borrow().iter() {
             let extra = min(
-                &self.armies_in_box.borrow()[*player.index.borrow()] - armies,
+                self.armies_in_box.borrow()[*player.index.borrow()] - armies,
                 continent.armies_reward,
             );
             armies += extra;
@@ -371,8 +371,8 @@ impl Game {
             }
 
             // Simulate dice rolls
-            let mut attacker_rolls = player_rolls_dice(&*aggressor, attack.dice, false);
-            let mut defender_rolls = player_rolls_dice(&*defender, defense, false);
+            let mut attacker_rolls = player_rolls_dice(&aggressor, attack.dice, false);
+            let mut defender_rolls = player_rolls_dice(&defender, defense, false);
 
             attacker_rolls.sort();
             defender_rolls.sort();
