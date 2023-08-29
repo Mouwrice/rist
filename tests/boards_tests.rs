@@ -71,6 +71,8 @@ mod claim_territory {
             White,
         ));
 
+        *player.armies.borrow_mut() = 1;
+
         board.claim_territory(0, Rc::clone(&player), false);
 
         assert_eq!(*territory.armies.borrow(), 1);

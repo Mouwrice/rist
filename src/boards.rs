@@ -98,7 +98,7 @@ impl BoardStruct {
 
         // The player needs to have one army available to claim a territory
         assert!(
-            *player.armies.borrow() > 1,
+            *player.armies.borrow() >= 1,
             "The player should have at least 1 army in it's inventory. {} has {} remaining",
             player.name,
             player.armies.borrow()
